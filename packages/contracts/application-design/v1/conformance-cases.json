@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "description": "Synthetic contract fixtures. mutations are test-only JSON Pointer edits, not permitted AI operations. Semantic expectations require the future validator; all leave runtime capabilities remain planned.",
+  "cases": [
+    {"id":"baseline_design","fixture":"leave.application.json","schema":"application","mutations":[],"schema_valid":true,"semantic_codes":["CAPABILITY_PLANNED"]},
+    {"id":"unknown_property","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"add","path":"/sql","value":"SELECT 1"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"server_tenant_override","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"add","path":"/tenant_id","value":"other-tenant"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"grid_out_of_range","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/forms/0/sections/0/fields/0/layout/desktop","value":13}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"arbitrary_component","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/forms/0/sections/0/fields/0/component","value":"javascript"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"missing_default_branch","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"remove","path":"/workflows/0/nodes/2/default_next"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"self_approval","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/workflows/0/nodes/1/allow_self_approval","value":true}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"empty_enum","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/models/0/fields/4/options","value":[]}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"aggregate_without_metric","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/views/2/metrics","value":[]}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"duplicate_field_id","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/models/0/fields/1/id","value":"leave_reason"}],"schema_valid":true,"semantic_codes":["DUPLICATE_ID"]},
+    {"id":"missing_field_reference","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/forms/0/sections/0/fields/0/field_id","value":"unknown_field"}],"schema_valid":true,"semantic_codes":["REFERENCE_MISSING"]},
+    {"id":"component_type_mismatch","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/forms/0/sections/0/fields/0/component","value":"textarea"}],"schema_valid":true,"semantic_codes":["TYPE_MISMATCH"]},
+    {"id":"workflow_cycle","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/workflows/0/nodes/1/on_approve","value":"advisor"}],"schema_valid":true,"semantic_codes":["WORKFLOW_CYCLE"]},
+    {"id":"missing_actor_resolver","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/workflows/0/nodes/1/actor/resolver_id","value":"directory.unknown"}],"schema_valid":true,"semantic_codes":["CAPABILITY_MISSING"]},
+    {"id":"derived_field_writable","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"add","path":"/policies/0/writable_field_ids/-","value":"leave_days"}],"schema_valid":true,"semantic_codes":["PERMISSION_ESCALATION"]},
+    {"id":"undefined_data_scope","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/policies/0/scope_resolver_id","value":"scope.all_tenants"}],"schema_valid":true,"semantic_codes":["CAPABILITY_MISSING","PERMISSION_ESCALATION"]},
+    {"id":"prototype_key","fixture":"leave.application.json","schema":"application","mutations":[{"operation":"replace","path":"/models/0/fields/0/key","value":"constructor"}],"schema_valid":true,"semantic_codes":["TYPE_MISMATCH"]},
+    {"id":"baseline_modification","fixture":"leave.proposal.json","schema":"ai-proposal","mutations":[],"schema_valid":true,"semantic_codes":["CAPABILITY_PLANNED"]},
+    {"id":"clarification_must_not_modify","fixture":"leave.proposal.json","schema":"ai-proposal","mutations":[{"operation":"replace","path":"/status","value":"needs_clarification"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"ai_cannot_publish","fixture":"leave.proposal.json","schema":"ai-proposal","mutations":[{"operation":"replace","path":"/operations/0/operation","value":"publish"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"invalid_base_digest","fixture":"leave.proposal.json","schema":"ai-proposal","mutations":[{"operation":"replace","path":"/base_content_hash","value":"invented"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"valid_shape_stale_revision","fixture":"leave.proposal.json","schema":"ai-proposal","mutations":[{"operation":"replace","path":"/base_revision","value":11}],"schema_valid":true,"semantic_codes":["REVISION_CONFLICT"]},
+    {"id":"control_binding_changed","fixture":"leave.proposal.json","schema":"ai-proposal","mutations":[{"operation":"replace","path":"/operations/0/value/field_id","value":"leave_status"}],"schema_valid":true,"semantic_codes":["TYPE_MISMATCH"]},
+    {"id":"baseline_clarification","fixture":"leave.clarification.json","schema":"ai-proposal","mutations":[],"schema_valid":true,"semantic_codes":["OPEN_QUESTION"]},
+    {"id":"baseline_creation","fixture":"leave.create-proposal.json","schema":"ai-proposal","mutations":[],"schema_valid":true,"semantic_codes":["CAPABILITY_PLANNED"]},
+    {"id":"creation_requires_zero_revision","fixture":"leave.create-proposal.json","schema":"ai-proposal","mutations":[{"operation":"replace","path":"/base_revision","value":1}],"schema_valid":false,"semantic_codes":[]}
+  ]
+}

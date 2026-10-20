@@ -1,0 +1,387 @@
+{
+  "protocol_version": "1.0.0",
+  "request_id": "request_leave_create",
+  "application_id": "leave",
+  "base_revision": 0,
+  "base_content_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+  "catalog_hash": "ec6ea95cdf7ef141e719c3d58607dece7332241b20c541ce9e8db4bef6eea77a",
+  "user_request": "按已确认的自然日和撤回规则，创建请假应用草稿。",
+  "draft": null,
+  "selection": {
+    "kind": "application",
+    "object_id": "leave"
+  },
+  "catalog": [
+    {
+      "id": "directory.department_head",
+      "kind": "relation",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "directory.student_advisor",
+      "kind": "relation",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "leave.adapter",
+      "kind": "adapter",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [
+        {
+          "id": "leave_reason",
+          "key": "reason",
+          "label": "请假原因",
+          "data_type": "string",
+          "nullable": false,
+          "constraints": {
+            "max_length": 500
+          },
+          "options": []
+        },
+        {
+          "id": "leave_start",
+          "key": "start_date",
+          "label": "开始日期",
+          "data_type": "date",
+          "nullable": false,
+          "constraints": {},
+          "options": []
+        },
+        {
+          "id": "leave_end",
+          "key": "end_date",
+          "label": "结束日期",
+          "data_type": "date",
+          "nullable": false,
+          "constraints": {},
+          "options": []
+        },
+        {
+          "id": "leave_days",
+          "key": "calendar_days",
+          "label": "请假自然日数",
+          "data_type": "integer",
+          "nullable": false,
+          "constraints": {},
+          "options": [],
+          "derived_by": "leave.calendar_days_inclusive"
+        },
+        {
+          "id": "leave_status",
+          "key": "status",
+          "label": "状态",
+          "data_type": "enum",
+          "nullable": false,
+          "constraints": {},
+          "options": [
+            {
+              "value": "draft",
+              "label": "草稿"
+            },
+            {
+              "value": "pending",
+              "label": "审批中"
+            },
+            {
+              "value": "approved",
+              "label": "已通过"
+            },
+            {
+              "value": "rejected",
+              "label": "已驳回"
+            },
+            {
+              "value": "withdrawn",
+              "label": "已撤回"
+            }
+          ]
+        }
+      ],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "leave.aggregate",
+      "kind": "query",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [
+        "read"
+      ],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "leave.calendar_days_inclusive",
+      "kind": "derived_field",
+      "description": "按 Asia/Shanghai 日历日期计算含首尾自然日数：end_date - start_date + 1，拒绝倒置日期；服务端计算，忽略客户端传值。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [
+        "leave_start",
+        "leave_end"
+      ],
+      "output_field_ids": [
+        "leave_days"
+      ],
+      "unit": "calendar_days"
+    },
+    {
+      "id": "leave.executor",
+      "kind": "executor",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [
+        "submit",
+        "approve",
+        "reject",
+        "withdraw"
+      ],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "leave.query",
+      "kind": "query",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [
+        "read"
+      ],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "leave.submit",
+      "kind": "action",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [
+        "submit"
+      ],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "leave.withdraw",
+      "kind": "action",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [
+        "withdraw"
+      ],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "role.config_admin",
+      "kind": "role",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "role.student",
+      "kind": "role",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "role.teacher",
+      "kind": "role",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "scope.assigned",
+      "kind": "scope",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "scope.department",
+      "kind": "scope",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    },
+    {
+      "id": "scope.own",
+      "kind": "scope",
+      "description": "设计样例占位能力；尚未注册运行实现。",
+      "availability": "planned",
+      "version": "1.0.0",
+      "model_ids": [
+        "leave"
+      ],
+      "allowed_operations": [],
+      "field_contracts": [],
+      "input_field_ids": [],
+      "output_field_ids": [],
+      "unit": "none"
+    }
+  ],
+  "authorization": {
+    "allowed_role_ids": [
+      "role.student",
+      "role.teacher",
+      "role.config_admin"
+    ],
+    "allowed_scope_resolver_ids": [
+      "scope.own",
+      "scope.assigned",
+      "scope.department"
+    ],
+    "allowed_operations": [
+      "read",
+      "create",
+      "submit",
+      "approve",
+      "reject",
+      "withdraw"
+    ],
+    "can_propose_policy_changes": true,
+    "model_permissions": [
+      {
+        "model_id": "leave",
+        "readable_field_ids": [
+          "leave_reason",
+          "leave_start",
+          "leave_end",
+          "leave_days",
+          "leave_status"
+        ],
+        "writable_field_ids": [
+          "leave_reason",
+          "leave_start",
+          "leave_end"
+        ],
+        "allowed_action_ids": [
+          "leave.submit",
+          "leave.withdraw"
+        ],
+        "allowed_query_ids": [
+          "leave.query",
+          "leave.aggregate"
+        ],
+        "allow_new_fields": false
+      }
+    ]
+  },
+  "decisions": [
+    {
+      "id": "duration_rule",
+      "statement": "Asia/Shanghai，含首尾自然日；三天不加院系审批，四天需要。"
+    },
+    {
+      "id": "withdrawal_rule",
+      "statement": "仅辅导员待审批阶段可撤回；院系审批阶段不可撤回。"
+    }
+  ],
+  "validation_issues": []
+}

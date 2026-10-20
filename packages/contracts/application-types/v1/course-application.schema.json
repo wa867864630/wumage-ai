@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:campus:application-types:v1:course-application",
+  "allOf": [
+    {
+      "$ref": "urn:campus:application-types:v1:envelope"
+    },
+    {
+      "type": "object",
+      "properties": {
+        "type_id": {
+          "const": "campus.course-query"
+        },
+        "type_version": {
+          "const": "1.0.0"
+        },
+        "bindings": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "schedule_reader": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 36,
+              "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+            }
+          },
+          "required": [
+            "schedule_reader"
+          ]
+        },
+        "config": {
+          "$ref": "urn:campus:application-types:v1:course-config"
+        }
+      }
+    }
+  ]
+}

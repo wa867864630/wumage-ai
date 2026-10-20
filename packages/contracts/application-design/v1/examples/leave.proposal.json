@@ -1,0 +1,40 @@
+{
+  "protocol_version": "1.0.0",
+  "request_id": "request_leave_001",
+  "application_id": "leave",
+  "base_revision": 12,
+  "base_content_hash": "fc9dd491bff817b23b31b91248a5ee4e7f85f23cb73f54b302e4a8fd418b6935",
+  "catalog_hash": "ec6ea95cdf7ef141e719c3d58607dece7332241b20c541ce9e8db4bef6eea77a",
+  "status": "proposed",
+  "summary": "请假原因改为非必填，保持字段标识、类型、布局和其他设置不变。数据字段仍不允许 null，空字符串与必填语义需按表单规则处理。",
+  "operations": [
+    {
+      "operation": "replace_control",
+      "form_id": "leave_form",
+      "control_id": "leave_reason_input",
+      "value": {
+        "id": "leave_reason_input",
+        "field_id": "leave_reason",
+        "component": "textarea",
+        "label": "请假原因",
+        "help": "",
+        "required": false,
+        "readonly": false,
+        "layout": {
+          "mobile": 12,
+          "tablet": 12,
+          "desktop": 12
+        }
+      }
+    }
+  ],
+  "questions": [],
+  "requirements": [
+    {
+      "id": "leave_runtime_pending",
+      "kind": "capability",
+      "capability_id": "leave.adapter",
+      "description": "此样例的请假业务及身份能力全部为 planned，可保存设计，发布前必须实现并验证所有依赖。"
+    }
+  ]
+}

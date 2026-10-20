@@ -1,0 +1,721 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:campus:application-design:v1:ai-proposal",
+  "title": "AI design proposal 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "1.0.0"
+    },
+    "request_id": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+    },
+    "application_id": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+    },
+    "base_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "base_content_hash": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/digest"
+    },
+    "catalog_hash": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/digest"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "needs_clarification"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "create_application"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application"
+              }
+            },
+            "required": [
+              "operation",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "set_metadata"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/metadata"
+              }
+            },
+            "required": [
+              "operation",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "set_required_capabilities"
+              },
+              "capability_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+                },
+                "minItems": 0,
+                "maxItems": 200,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "operation",
+              "capability_ids"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_control"
+              },
+              "form_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              },
+              "control_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/control"
+              }
+            },
+            "required": [
+              "operation",
+              "form_id",
+              "control_id",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "reorder_controls"
+              },
+              "form_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              },
+              "section_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              },
+              "control_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+                },
+                "minItems": 1,
+                "maxItems": 50,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "operation",
+              "form_id",
+              "section_id",
+              "control_ids"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "models"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/model"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "models"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/model"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "models"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "forms"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/form"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "forms"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/form"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "forms"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "workflows"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/workflow"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "workflows"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/workflow"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "workflows"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "views"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/view"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "views"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/view"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "views"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "policies"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/policy"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "policies"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/policy"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "policies"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "pages"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/page"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "pages"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/page"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "pages"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "add_object"
+              },
+              "collection": {
+                "const": "navigation"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/navigation"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_object"
+              },
+              "collection": {
+                "const": "navigation"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/navigation"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "remove_object"
+              },
+              "collection": {
+                "const": "navigation"
+              },
+              "target_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              }
+            },
+            "required": [
+              "operation",
+              "collection",
+              "target_id"
+            ]
+          }
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 50
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "blocking": {
+            "const": true
+          },
+          "suggested_answers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "minItems": 0,
+            "maxItems": 5
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "blocking",
+          "suggested_answers"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 10
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+          },
+          "kind": {
+            "enum": [
+              "capability",
+              "data",
+              "identity",
+              "business_rule"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "capability_id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "description"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 30
+    }
+  },
+  "required": [
+    "protocol_version",
+    "request_id",
+    "application_id",
+    "base_revision",
+    "base_content_hash",
+    "catalog_hash",
+    "status",
+    "summary",
+    "operations",
+    "questions",
+    "requirements"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "needs_clarification"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operations": {
+            "maxItems": 0
+          },
+          "questions": {
+            "minItems": 1
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "operations": {
+            "minItems": 1
+          },
+          "questions": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "operations": {
+            "contains": {
+              "properties": {
+                "operation": {
+                  "const": "create_application"
+                }
+              },
+              "required": [
+                "operation"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "base_revision": {
+            "const": 0
+          },
+          "operations": {
+            "maxItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

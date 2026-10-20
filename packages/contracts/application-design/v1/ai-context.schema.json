@@ -1,0 +1,380 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:campus:application-design:v1:ai-context",
+  "title": "Server constructed AI design context 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "1.0.0"
+    },
+    "request_id": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+    },
+    "application_id": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+    },
+    "base_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "base_content_hash": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/digest"
+    },
+    "catalog_hash": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/digest"
+    },
+    "user_request": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 8000
+    },
+    "draft": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "urn:campus:application-design:v1:application"
+        }
+      ]
+    },
+    "selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "application",
+            "model",
+            "form",
+            "control",
+            "workflow",
+            "node",
+            "view",
+            "policy",
+            "page",
+            "navigation"
+          ]
+        },
+        "object_id": {
+          "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+        },
+        "parent_id": {
+          "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+        }
+      },
+      "required": [
+        "kind",
+        "object_id"
+      ]
+    },
+    "catalog": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+          },
+          "kind": {
+            "enum": [
+              "adapter",
+              "action",
+              "query",
+              "relation",
+              "scope",
+              "executor",
+              "derived_field",
+              "role",
+              "subject"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "availability": {
+            "enum": [
+              "available",
+              "planned"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "model_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+            },
+            "minItems": 0,
+            "maxItems": 20,
+            "uniqueItems": true
+          },
+          "allowed_operations": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "read",
+                "create",
+                "submit",
+                "approve",
+                "reject",
+                "withdraw"
+              ]
+            },
+            "minItems": 0,
+            "maxItems": 6,
+            "uniqueItems": true
+          },
+          "field_contracts": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:campus:application-design:v1:application#/$defs/dataField"
+            },
+            "minItems": 0,
+            "maxItems": 100
+          },
+          "input_field_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+            },
+            "minItems": 0,
+            "maxItems": 100,
+            "uniqueItems": true
+          },
+          "output_field_ids": {
+            "type": "array",
+            "items": {
+              "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+            },
+            "minItems": 0,
+            "maxItems": 100,
+            "uniqueItems": true
+          },
+          "unit": {
+            "enum": [
+              "none",
+              "minutes",
+              "calendar_days",
+              "count",
+              "currency_minor"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "description",
+          "availability",
+          "version",
+          "model_ids",
+          "allowed_operations",
+          "field_contracts",
+          "input_field_ids",
+          "output_field_ids",
+          "unit"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 300
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_role_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "allowed_scope_resolver_ids": {
+          "type": "array",
+          "items": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+          },
+          "minItems": 0,
+          "maxItems": 30,
+          "uniqueItems": true
+        },
+        "allowed_operations": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "read",
+              "create",
+              "submit",
+              "approve",
+              "reject",
+              "withdraw"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 6,
+          "uniqueItems": true
+        },
+        "can_propose_policy_changes": {
+          "type": "boolean"
+        },
+        "model_permissions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "model_id": {
+                "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+              },
+              "readable_field_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+                },
+                "minItems": 0,
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "writable_field_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+                },
+                "minItems": 0,
+                "maxItems": 100,
+                "uniqueItems": true
+              },
+              "allowed_action_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+                },
+                "minItems": 0,
+                "maxItems": 50,
+                "uniqueItems": true
+              },
+              "allowed_query_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:application#/$defs/capabilityId"
+                },
+                "minItems": 0,
+                "maxItems": 50,
+                "uniqueItems": true
+              },
+              "allow_new_fields": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "model_id",
+              "readable_field_ids",
+              "writable_field_ids",
+              "allowed_action_ids",
+              "allowed_query_ids",
+              "allow_new_fields"
+            ]
+          },
+          "minItems": 0,
+          "maxItems": 10
+        }
+      },
+      "required": [
+        "allowed_role_ids",
+        "allowed_scope_resolver_ids",
+        "allowed_operations",
+        "can_propose_policy_changes",
+        "model_permissions"
+      ]
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+          },
+          "statement": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "id",
+          "statement"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 50
+    },
+    "validation_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 80
+          },
+          "object_id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 300
+          },
+          "severity": {
+            "enum": [
+              "error",
+              "warning"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "code",
+          "object_id",
+          "path",
+          "severity",
+          "message"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 100
+    }
+  },
+  "required": [
+    "protocol_version",
+    "request_id",
+    "application_id",
+    "base_revision",
+    "base_content_hash",
+    "catalog_hash",
+    "user_request",
+    "draft",
+    "selection",
+    "catalog",
+    "authorization",
+    "decisions",
+    "validation_issues"
+  ]
+}

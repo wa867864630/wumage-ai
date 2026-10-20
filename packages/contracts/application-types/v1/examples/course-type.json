@@ -1,0 +1,29 @@
+{
+  "protocol_version": "1.0.0",
+  "type_id": "campus.course-query",
+  "type_version": "1.0.0",
+  "family": "query",
+  "title": "课程查询",
+  "config_schema_id": "urn:campus:application-types:v1:course-config",
+  "config_schema_version": "1.0.0",
+  "runtime_adapter_id": "course-query-v1",
+  "editor_sections": [
+    {
+      "id": "display",
+      "title": "结果展示",
+      "editor_id": "course-columns-v1"
+    },
+    {
+      "id": "questions",
+      "title": "问法与规则",
+      "editor_id": "course-questions-v1"
+    }
+  ],
+  "features": {
+    "ai_design": true,
+    "question_library": true
+  },
+  "required_capability_ids": [
+    "course.schedule.read"
+  ]
+}

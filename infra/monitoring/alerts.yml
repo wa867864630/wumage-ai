@@ -1,0 +1,24 @@
+groups:
+  - name: campus
+    rules:
+      - alert: CampusAPIUnavailable
+        expr: up{job="campus"} == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Campus API cannot be scraped
+      - alert: CampusHighErrorRate
+        expr: rate(campus_events_total{event="errors"}[5m]) / clamp_min(rate(campus_events_total{event="requests"}[5m]), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Campus API error ratio exceeds 5 percent
+      - alert: CampusOutboxFailed
+        expr: campus_outbox_events{state="failed"} > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Configuration delivery needs manual retry

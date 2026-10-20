@@ -1,0 +1,40 @@
+# 复制为 config.local.toml；本地配置已被 Git 忽略。
+[database]
+backend = "postgresql" # openGauss 实例改为 "opengauss"
+host = "127.0.0.1"
+port = 5432
+name = "campus_dev"
+user = "campus"
+password = ""
+sslmode = "prefer"
+
+[local_admin]
+token = ""
+
+[auth]
+mode = "demo" # demo: 登录后使用模拟学生会话或管理令牌；oidc: 验证校园访问令牌；两者均拒绝匿名访问
+# issuer = "https://sso.example.edu"
+# audience = "campus-api"
+# jwks_url = "https://sso.example.edu/.well-known/jwks.json"
+# tenant_claim = "tenant_id"
+# roles_claim = "roles"
+# student_claim = "student_id"
+
+[sis]
+mode = "database" # database: 读取 biz_ 模拟业务表（需显式生成）；mock: 代码生成；http: 教务适配接口
+# url = "https://sis.example.edu/campus-adapter/schedule"
+# token = ""
+
+[redis]
+# url = "redis://127.0.0.1:6379/0" # 未设置时仅使用数据库；不可用时自动回源
+
+[telemetry]
+enabled = false
+# endpoint = "http://127.0.0.1:4318/v1/traces" # 启用前安装 requirements-observability.txt
+
+[deployment]
+enabled = false # 仅本地开发机显式启用；线上保持关闭。目前仅 SSH 指纹与只读检查。
+operator_subjects = [] # 独立授权，例如 ["local-admin"]；应用管理权限不会自动获得服务器权限
+allowed_hosts = [] # 服务器明确 IP 地址白名单，例如 ["192.0.2.10"]，不保存密码
+# [deployment.host_fingerprints]
+# "192.0.2.10:22" = "SHA256:独立核实的真实服务器主机指纹"

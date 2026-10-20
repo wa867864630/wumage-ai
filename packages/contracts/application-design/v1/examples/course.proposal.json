@@ -1,0 +1,30 @@
+{
+  "protocol_version": "1.0.0",
+  "profile": "course_query",
+  "request_id": "request_schedule_001",
+  "application_id": "schedule",
+  "base_revision": 7,
+  "base_content_hash": "2c5447bfced4c43c84bd1453e9354fa6f708be023dbee1583ff12d26e82865d8",
+  "catalog_hash": "8df69a058f380f9f7694da1730c6f7b988383452257228bc6e42593d78c71939",
+  "status": "proposed",
+  "summary": "地点列改名为上课地点，教师列隐藏；角色、规则和字段顺序不变。",
+  "operations": [
+    {
+      "operation": "set_column",
+      "value": {
+        "field": "location",
+        "label": "上课地点",
+        "visible": true
+      }
+    },
+    {
+      "operation": "set_column",
+      "value": {
+        "field": "teacher",
+        "label": "教师",
+        "visible": false
+      }
+    }
+  ],
+  "questions": []
+}

@@ -1,0 +1,9 @@
+{
+  "format": "campus-version-policy-v1",
+  "platform_version": "0.2.0",
+  "channel": "development",
+  "production_release": false,
+  "baseline_stage": "P0",
+  "database_revision": "0006_application_runtime",
+  "notes": "Declared development version; source/archive digests and verification evidence are generated separately."
+}

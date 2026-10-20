@@ -1,0 +1,9 @@
+fastapi==0.141.1
+uvicorn==0.52.4
+httpx==0.28.1
+SQLAlchemy>=2.0,<2.1
+psycopg[binary]>=3.2,<4
+alembic>=1.14,<2
+tzdata>=2025.2
+PyJWT[crypto]>=2.10,<3
+redis>=5,<8

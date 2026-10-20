@@ -1,0 +1,175 @@
+{
+  "$defs": {
+    "ApplicationInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "default": "学习服务",
+          "enum": [
+            "学习服务",
+            "校园事务",
+            "校园生活"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "default": "一句话查询课程，随时掌握每天的学习安排。",
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "default": "课表助手",
+          "maxLength": 30,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "visible_roles": {
+          "items": {
+            "enum": [
+              "student",
+              "teacher",
+              "config_admin"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Visible Roles",
+          "type": "array"
+        }
+      },
+      "title": "ApplicationInfo",
+      "type": "object"
+    },
+    "Column": {
+      "additionalProperties": false,
+      "properties": {
+        "field": {
+          "enum": [
+            "name",
+            "date",
+            "start_time",
+            "end_time",
+            "location",
+            "teacher"
+          ],
+          "title": "Field",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 30,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "visible": {
+          "default": true,
+          "title": "Visible",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "field",
+        "label"
+      ],
+      "title": "Column",
+      "type": "object"
+    },
+    "IntentRule": {
+      "additionalProperties": false,
+      "properties": {
+        "date_mode": {
+          "default": "today",
+          "enum": [
+            "today",
+            "tomorrow",
+            "day_after",
+            "this_week",
+            "next_week"
+          ],
+          "title": "Date Mode",
+          "type": "string"
+        },
+        "enabled": {
+          "default": true,
+          "title": "Enabled",
+          "type": "boolean"
+        },
+        "id": {
+          "pattern": "^[a-zA-Z0-9_-]{1,40}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "match_type": {
+          "default": "exact",
+          "enum": [
+            "exact",
+            "keywords"
+          ],
+          "title": "Match Type",
+          "type": "string"
+        },
+        "priority": {
+          "default": 100,
+          "maximum": 1000,
+          "minimum": 1,
+          "title": "Priority",
+          "type": "integer"
+        },
+        "terms": {
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "minItems": 1,
+          "title": "Terms",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "terms"
+      ],
+      "title": "IntentRule",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "application": {
+      "$ref": "#/$defs/ApplicationInfo"
+    },
+    "columns": {
+      "items": {
+        "$ref": "#/$defs/Column"
+      },
+      "maxItems": 6,
+      "minItems": 1,
+      "title": "Columns",
+      "type": "array"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/IntentRule"
+      },
+      "maxItems": 50,
+      "title": "Rules",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "1",
+      "default": "1",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "columns"
+  ],
+  "title": "DisplayConfig",
+  "type": "object"
+}

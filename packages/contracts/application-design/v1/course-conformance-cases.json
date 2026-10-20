@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "description": "Course MVP synthetic design cases. Semantic expectations target the future proposal validator and existing DisplayConfig/review checks, not a claim of implemented AI runtime.",
+  "cases": [
+    {"id":"course_baseline","fixture":"course.proposal.json","schema":"course-proposal","mutations":[],"schema_valid":true,"semantic_codes":[]},
+    {"id":"cannot_switch_application","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/application_id","value":"leave"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"cannot_switch_profile","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/profile","value":"generic"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"cannot_grant_roles","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"add","path":"/visible_roles","value":["config_admin"]}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"cannot_create_application","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/operations/0/operation","value":"create_application"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"cannot_invent_column","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/operations/0/value/field","value":"student_id"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"cannot_send_sql","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"add","path":"/operations/0/value/sql","value":"SELECT 1"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"clarification_cannot_write","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/status","value":"needs_clarification"}],"schema_valid":false,"semantic_codes":[]},
+    {"id":"cannot_omit_columns_when_reordering","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/operations","value":[{"operation":"reorder_columns","fields":["name"]}]}],"schema_valid":true,"semantic_codes":["COLUMN_SET_CHANGED"]},
+    {"id":"no_conflicting_column_changes","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/operations/1/value/field","value":"location"}],"schema_valid":true,"semantic_codes":["OPERATION_CONFLICT"]},
+    {"id":"stale_revision","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/base_revision","value":6}],"schema_valid":true,"semantic_codes":["REVISION_CONFLICT"]},
+    {"id":"negation_rule_requires_business_validation","fixture":"course.proposal.json","schema":"course-proposal","mutations":[{"operation":"replace","path":"/operations","value":[{"operation":"replace_rules","rules":[{"id":"unsafe_alias","enabled":true,"priority":100,"match_type":"exact","terms":["不要查今天课表"],"date_mode":"today"}]}]}],"schema_valid":true,"semantic_codes":["UNSUPPORTED_RULE"]}
+  ]
+}

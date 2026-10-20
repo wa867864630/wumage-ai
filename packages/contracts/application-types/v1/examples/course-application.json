@@ -1,0 +1,32 @@
+{
+  "envelope_version": "1.0.0",
+  "application_id": "d08b2476-eeb0-4c15-aac6-e30ef8c1cd88",
+  "type_id": "campus.course-query",
+  "type_version": "1.0.0",
+  "metadata": {
+    "name": "本科课表",
+    "description": "查询本人课程安排",
+    "category": "学习服务"
+  },
+  "access": {
+    "use_roles": [
+      "student",
+      "teacher",
+      "config_admin"
+    ]
+  },
+  "bindings": {
+    "schedule_reader": "e08b2476-eeb0-4c15-aac6-e30ef8c1cd88"
+  },
+  "config": {
+    "schema_version": "1",
+    "columns": [
+      {
+        "field": "name",
+        "label": "课程",
+        "visible": true
+      }
+    ],
+    "rules": []
+  }
+}

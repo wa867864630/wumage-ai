@@ -1,0 +1,70 @@
+{
+  "protocol_version": "1.0.0",
+  "profile": "course_query",
+  "application_id": "schedule",
+  "request_id": "request_schedule_001",
+  "base_revision": 7,
+  "base_content_hash": "2c5447bfced4c43c84bd1453e9354fa6f708be023dbee1583ff12d26e82865d8",
+  "catalog_hash": "8df69a058f380f9f7694da1730c6f7b988383452257228bc6e42593d78c71939",
+  "draft": {
+    "schema_version": "1",
+    "columns": [
+      {
+        "field": "name",
+        "label": "课程",
+        "visible": true
+      },
+      {
+        "field": "date",
+        "label": "日期",
+        "visible": true
+      },
+      {
+        "field": "start_time",
+        "label": "开始时间",
+        "visible": true
+      },
+      {
+        "field": "end_time",
+        "label": "结束时间",
+        "visible": true
+      },
+      {
+        "field": "location",
+        "label": "地点",
+        "visible": true
+      },
+      {
+        "field": "teacher",
+        "label": "教师",
+        "visible": true
+      }
+    ],
+    "rules": [],
+    "application": {
+      "name": "课表助手",
+      "description": "一句话查询课程，随时掌握每天的学习安排。",
+      "category": "学习服务",
+      "visible_roles": [
+        "student",
+        "teacher",
+        "config_admin"
+      ]
+    }
+  },
+  "user_request": "把地点改成上课地点，隐藏教师，其他设置不变。",
+  "selection": {
+    "kind": "application",
+    "object_id": "schedule"
+  },
+  "allowed_operations": [
+    "set_column",
+    "reorder_columns",
+    "replace_rules",
+    "set_application_metadata"
+  ],
+  "confirmed_decisions": [
+    "保持现有访问角色不变；学生查询继续使用已发布课表规则且不调用模型。"
+  ],
+  "validation_issues": []
+}

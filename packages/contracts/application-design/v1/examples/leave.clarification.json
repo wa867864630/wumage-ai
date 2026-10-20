@@ -1,0 +1,23 @@
+{
+  "protocol_version": "1.0.0",
+  "request_id": "request_leave_001",
+  "application_id": "leave",
+  "base_revision": 12,
+  "base_content_hash": "fc9dd491bff817b23b31b91248a5ee4e7f85f23cb73f54b302e4a8fd418b6935",
+  "catalog_hash": "ec6ea95cdf7ef141e719c3d58607dece7332241b20c541ce9e8db4bef6eea77a",
+  "status": "needs_clarification",
+  "summary": "撤回范围需要明确。",
+  "operations": [],
+  "questions": [
+    {
+      "id": "withdrawal_stage",
+      "text": "辅导员通过后，院系审批期间是否仍允许申请人撤回？",
+      "blocking": true,
+      "suggested_answers": [
+        "只允许辅导员待审批阶段撤回",
+        "院系审批阶段也允许撤回"
+      ]
+    }
+  ],
+  "requirements": []
+}

@@ -1,0 +1,276 @@
+[
+  {
+    "name": "accept manifest",
+    "target": "manifest",
+    "valid": true
+  },
+  {
+    "name": "accept course",
+    "target": "course",
+    "valid": true
+  },
+  {
+    "name": "reject course tenant_id case 2",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "tenant_id"
+      ],
+      "value": "other"
+    }
+  },
+  {
+    "name": "reject course script case 3",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "script"
+      ],
+      "value": "alert(1)"
+    }
+  },
+  {
+    "name": "reject course type_id case 4",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "type_id"
+      ],
+      "value": "campus.inventory-query"
+    }
+  },
+  {
+    "name": "reject course type_version case 5",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "type_version"
+      ],
+      "value": "latest"
+    }
+  },
+  {
+    "name": "reject course type_version case 6",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "type_version"
+      ],
+      "value": "2.0.0"
+    }
+  },
+  {
+    "name": "reject course application_id case 7",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "application_id"
+      ],
+      "value": "schedule"
+    }
+  },
+  {
+    "name": "reject course access.use_roles case 8",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "access",
+        "use_roles"
+      ],
+      "value": [
+        "student",
+        "student"
+      ]
+    }
+  },
+  {
+    "name": "reject course access.use_roles case 9",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "access",
+        "use_roles"
+      ],
+      "value": []
+    }
+  },
+  {
+    "name": "reject course access.use_roles case 10",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "access",
+        "use_roles"
+      ],
+      "value": [
+        "superadmin"
+      ]
+    }
+  },
+  {
+    "name": "reject course bindings.api_key case 11",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "bindings",
+        "api_key"
+      ],
+      "value": "secret"
+    }
+  },
+  {
+    "name": "reject course bindings.schedule_reader case 12",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "bindings",
+        "schedule_reader"
+      ],
+      "value": "https://example.invalid"
+    }
+  },
+  {
+    "name": "reject course config.columns.0.field case 13",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "config",
+        "columns",
+        0,
+        "field"
+      ],
+      "value": "password"
+    }
+  },
+  {
+    "name": "reject course config.sql case 14",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "config",
+        "sql"
+      ],
+      "value": "select 1"
+    }
+  },
+  {
+    "name": "reject course config.application case 15",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "config",
+        "application"
+      ],
+      "value": {}
+    }
+  },
+  {
+    "name": "reject course envelope_version case 16",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "envelope_version"
+      ],
+      "value": "2.0.0"
+    }
+  },
+  {
+    "name": "reject course bindings.schedule_reader case 17",
+    "target": "course",
+    "valid": false,
+    "change": {
+      "path": [
+        "bindings",
+        "schedule_reader"
+      ],
+      "remove": true
+    }
+  },
+  {
+    "name": "reject manifest editor_sections.0.editor_id case 18",
+    "target": "manifest",
+    "valid": false,
+    "change": {
+      "path": [
+        "editor_sections",
+        0,
+        "editor_id"
+      ],
+      "value": "https://example.invalid/a.js"
+    }
+  },
+  {
+    "name": "reject manifest module_path case 19",
+    "target": "manifest",
+    "valid": false,
+    "change": {
+      "path": [
+        "module_path"
+      ],
+      "value": "os.system"
+    }
+  },
+  {
+    "name": "reject manifest family case 20",
+    "target": "manifest",
+    "valid": false,
+    "change": {
+      "path": [
+        "family"
+      ],
+      "value": "arbitrary"
+    }
+  },
+  {
+    "name": "reject manifest required_capability_ids case 21",
+    "target": "manifest",
+    "valid": false,
+    "change": {
+      "path": [
+        "required_capability_ids"
+      ],
+      "value": [
+        "course.schedule.read",
+        "course.schedule.read"
+      ]
+    }
+  },
+  {
+    "name": "reject manifest features.execute_code case 22",
+    "target": "manifest",
+    "valid": false,
+    "change": {
+      "path": [
+        "features",
+        "execute_code"
+      ],
+      "value": true
+    }
+  },
+  {
+    "name": "reject manifest type_version case 23",
+    "target": "manifest",
+    "valid": false,
+    "change": {
+      "path": [
+        "type_version"
+      ],
+      "value": "1.x"
+    }
+  }
+]

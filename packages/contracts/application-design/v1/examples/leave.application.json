@@ -1,0 +1,464 @@
+{
+  "schema_version": "1.0.0",
+  "application_id": "leave",
+  "metadata": {
+    "name": "请假申请设计样例",
+    "description": "合成设计样例；相关业务与身份能力为待实现项，不可直接发布运行。",
+    "category": "校园事务"
+  },
+  "required_capability_ids": [
+    "leave.adapter",
+    "leave.submit",
+    "leave.withdraw",
+    "leave.query",
+    "leave.aggregate",
+    "leave.executor",
+    "leave.calendar_days_inclusive",
+    "directory.student_advisor",
+    "directory.department_head",
+    "scope.own",
+    "scope.assigned",
+    "scope.department",
+    "role.student",
+    "role.teacher",
+    "role.config_admin"
+  ],
+  "models": [
+    {
+      "id": "leave",
+      "name": "请假申请",
+      "adapter_id": "leave.adapter",
+      "fields": [
+        {
+          "id": "leave_reason",
+          "key": "reason",
+          "label": "请假原因",
+          "data_type": "string",
+          "nullable": false,
+          "constraints": {
+            "max_length": 500
+          },
+          "options": []
+        },
+        {
+          "id": "leave_start",
+          "key": "start_date",
+          "label": "开始日期",
+          "data_type": "date",
+          "nullable": false,
+          "constraints": {},
+          "options": []
+        },
+        {
+          "id": "leave_end",
+          "key": "end_date",
+          "label": "结束日期",
+          "data_type": "date",
+          "nullable": false,
+          "constraints": {},
+          "options": []
+        },
+        {
+          "id": "leave_days",
+          "key": "calendar_days",
+          "label": "请假自然日数",
+          "data_type": "integer",
+          "nullable": false,
+          "constraints": {},
+          "options": [],
+          "derived_by": "leave.calendar_days_inclusive"
+        },
+        {
+          "id": "leave_status",
+          "key": "status",
+          "label": "状态",
+          "data_type": "enum",
+          "nullable": false,
+          "constraints": {},
+          "options": [
+            {
+              "value": "draft",
+              "label": "草稿"
+            },
+            {
+              "value": "pending",
+              "label": "审批中"
+            },
+            {
+              "value": "approved",
+              "label": "已通过"
+            },
+            {
+              "value": "rejected",
+              "label": "已驳回"
+            },
+            {
+              "value": "withdrawn",
+              "label": "已撤回"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "forms": [
+    {
+      "id": "leave_form",
+      "name": "请假申请表",
+      "model_id": "leave",
+      "sections": [
+        {
+          "id": "request_info",
+          "title": "申请内容",
+          "fields": [
+            {
+              "id": "leave_start_input",
+              "field_id": "leave_start",
+              "component": "date",
+              "label": "开始日期",
+              "help": "",
+              "required": true,
+              "readonly": false,
+              "layout": {
+                "mobile": 12,
+                "tablet": 6,
+                "desktop": 6
+              }
+            },
+            {
+              "id": "leave_end_input",
+              "field_id": "leave_end",
+              "component": "date",
+              "label": "结束日期",
+              "help": "",
+              "required": true,
+              "readonly": false,
+              "layout": {
+                "mobile": 12,
+                "tablet": 6,
+                "desktop": 6
+              }
+            },
+            {
+              "id": "leave_reason_input",
+              "field_id": "leave_reason",
+              "component": "textarea",
+              "label": "请假原因",
+              "help": "",
+              "required": true,
+              "readonly": false,
+              "layout": {
+                "mobile": 12,
+                "tablet": 12,
+                "desktop": 12
+              }
+            }
+          ]
+        }
+      ],
+      "submit_action_id": "leave.submit"
+    }
+  ],
+  "workflows": [
+    {
+      "id": "leave_flow",
+      "name": "请假审批",
+      "model_id": "leave",
+      "form_id": "leave_form",
+      "executor_id": "leave.executor",
+      "entry_node_id": "start",
+      "withdrawal": {
+        "allowed_at_node_ids": [
+          "advisor"
+        ],
+        "action_id": "leave.withdraw"
+      },
+      "nodes": [
+        {
+          "id": "start",
+          "type": "start",
+          "next": "advisor"
+        },
+        {
+          "id": "advisor",
+          "type": "approval",
+          "name": "辅导员审批",
+          "actor": {
+            "kind": "relation",
+            "resolver_id": "directory.student_advisor",
+            "selection": "exactly_one"
+          },
+          "allow_self_approval": false,
+          "on_missing_actor": "block",
+          "on_approve": "days_branch",
+          "on_reject": "rejected"
+        },
+        {
+          "id": "days_branch",
+          "type": "branch",
+          "name": "超过三天",
+          "evaluation": "first_match",
+          "cases": [
+            {
+              "id": "over_three_days",
+              "when": {
+                "operator": "gt",
+                "left": {
+                  "kind": "field",
+                  "field_id": "leave_days"
+                },
+                "right": {
+                  "kind": "literal",
+                  "value": 3
+                }
+              },
+              "next": "department"
+            }
+          ],
+          "default_next": "approved"
+        },
+        {
+          "id": "department",
+          "type": "approval",
+          "name": "院系负责人审批",
+          "actor": {
+            "kind": "relation",
+            "resolver_id": "directory.department_head",
+            "selection": "exactly_one"
+          },
+          "allow_self_approval": false,
+          "on_missing_actor": "block",
+          "on_approve": "approved",
+          "on_reject": "rejected"
+        },
+        {
+          "id": "approved",
+          "type": "end",
+          "outcome": "approved"
+        },
+        {
+          "id": "rejected",
+          "type": "end",
+          "outcome": "rejected"
+        }
+      ]
+    }
+  ],
+  "policies": [
+    {
+      "id": "own_requests",
+      "name": "own_requests",
+      "model_id": "leave",
+      "role_ids": [
+        "role.student"
+      ],
+      "scope_resolver_id": "scope.own",
+      "operations": [
+        "read",
+        "create",
+        "submit",
+        "withdraw"
+      ],
+      "readable_field_ids": [
+        "leave_reason",
+        "leave_start",
+        "leave_end",
+        "leave_days",
+        "leave_status"
+      ],
+      "writable_field_ids": [
+        "leave_reason",
+        "leave_start",
+        "leave_end"
+      ]
+    },
+    {
+      "id": "assigned_requests",
+      "name": "assigned_requests",
+      "model_id": "leave",
+      "role_ids": [
+        "role.teacher"
+      ],
+      "scope_resolver_id": "scope.assigned",
+      "operations": [
+        "read",
+        "approve",
+        "reject"
+      ],
+      "readable_field_ids": [
+        "leave_reason",
+        "leave_start",
+        "leave_end",
+        "leave_days",
+        "leave_status"
+      ],
+      "writable_field_ids": []
+    },
+    {
+      "id": "department_requests",
+      "name": "department_requests",
+      "model_id": "leave",
+      "role_ids": [
+        "role.config_admin"
+      ],
+      "scope_resolver_id": "scope.department",
+      "operations": [
+        "read"
+      ],
+      "readable_field_ids": [
+        "leave_reason",
+        "leave_start",
+        "leave_end",
+        "leave_days",
+        "leave_status"
+      ],
+      "writable_field_ids": []
+    }
+  ],
+  "views": [
+    {
+      "id": "my_requests",
+      "name": "我的申请",
+      "kind": "list",
+      "model_id": "leave",
+      "query_id": "leave.query",
+      "policy_id": "own_requests",
+      "columns": [
+        {
+          "id": "my_requests_reason",
+          "field_id": "leave_reason",
+          "label": "请假原因",
+          "format": "text"
+        },
+        {
+          "id": "my_requests_status",
+          "field_id": "leave_status",
+          "label": "状态",
+          "format": "enum_label"
+        }
+      ],
+      "filterable_field_ids": [
+        "leave_status"
+      ],
+      "sort": [],
+      "page_size": 20,
+      "group_by_field_ids": [],
+      "metrics": []
+    },
+    {
+      "id": "my_tasks",
+      "name": "我的待办",
+      "kind": "list",
+      "model_id": "leave",
+      "query_id": "leave.query",
+      "policy_id": "assigned_requests",
+      "columns": [
+        {
+          "id": "my_tasks_reason",
+          "field_id": "leave_reason",
+          "label": "请假原因",
+          "format": "text"
+        },
+        {
+          "id": "my_tasks_status",
+          "field_id": "leave_status",
+          "label": "状态",
+          "format": "enum_label"
+        }
+      ],
+      "filterable_field_ids": [
+        "leave_status"
+      ],
+      "sort": [],
+      "page_size": 20,
+      "group_by_field_ids": [],
+      "metrics": []
+    },
+    {
+      "id": "department_summary",
+      "name": "本院系申请统计",
+      "kind": "aggregate",
+      "model_id": "leave",
+      "query_id": "leave.aggregate",
+      "policy_id": "department_requests",
+      "columns": [],
+      "filterable_field_ids": [
+        "leave_status"
+      ],
+      "sort": [],
+      "page_size": 20,
+      "group_by_field_ids": [],
+      "metrics": [
+        {
+          "id": "application_count",
+          "label": "申请数量",
+          "aggregation": "count"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": "apply_page",
+      "name": "填写申请",
+      "kind": "form",
+      "target_id": "leave_form",
+      "policy_id": "own_requests"
+    },
+    {
+      "id": "requests_page",
+      "name": "我的申请",
+      "kind": "view",
+      "target_id": "my_requests",
+      "policy_id": "own_requests"
+    },
+    {
+      "id": "tasks_page",
+      "name": "我的待办",
+      "kind": "view",
+      "target_id": "my_tasks",
+      "policy_id": "assigned_requests"
+    },
+    {
+      "id": "summary_page",
+      "name": "本院系统计",
+      "kind": "view",
+      "target_id": "department_summary",
+      "policy_id": "department_requests"
+    }
+  ],
+  "navigation": [
+    {
+      "id": "apply_nav",
+      "label": "填写申请",
+      "page_id": "apply_page",
+      "role_ids": [
+        "role.student"
+      ]
+    },
+    {
+      "id": "requests_nav",
+      "label": "我的申请",
+      "page_id": "requests_page",
+      "role_ids": [
+        "role.student"
+      ]
+    },
+    {
+      "id": "tasks_nav",
+      "label": "我的待办",
+      "page_id": "tasks_page",
+      "role_ids": [
+        "role.teacher"
+      ]
+    },
+    {
+      "id": "summary_nav",
+      "label": "本院系统计",
+      "page_id": "summary_page",
+      "role_ids": [
+        "role.config_admin"
+      ]
+    }
+  ]
+}

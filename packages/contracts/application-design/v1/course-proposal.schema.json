@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:campus:application-design:v1:course-proposal",
+  "title": "Course MVP AI proposal 1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "protocol_version": {
+      "const": "1.0.0"
+    },
+    "profile": {
+      "const": "course_query"
+    },
+    "request_id": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+    },
+    "application_id": {
+      "const": "schedule"
+    },
+    "base_revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "base_content_hash": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/digest"
+    },
+    "catalog_hash": {
+      "$ref": "urn:campus:application-design:v1:application#/$defs/digest"
+    },
+    "status": {
+      "enum": [
+        "proposed",
+        "needs_clarification"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1000
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "set_column"
+              },
+              "value": {
+                "$ref": "urn:campus:application-design:v1:course-context#/$defs/Column"
+              }
+            },
+            "required": [
+              "operation",
+              "value"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "reorder_columns"
+              },
+              "fields": {
+                "type": "array",
+                "items": {
+                  "enum": [
+                    "name",
+                    "date",
+                    "start_time",
+                    "end_time",
+                    "location",
+                    "teacher"
+                  ]
+                },
+                "minItems": 1,
+                "maxItems": 6,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "operation",
+              "fields"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "replace_rules"
+              },
+              "rules": {
+                "type": "array",
+                "items": {
+                  "$ref": "urn:campus:application-design:v1:course-context#/$defs/IntentRule"
+                },
+                "minItems": 0,
+                "maxItems": 50
+              }
+            },
+            "required": [
+              "operation",
+              "rules"
+            ]
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "operation": {
+                "const": "set_application_metadata"
+              },
+              "value": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30
+                  },
+                  "description": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 160
+                  },
+                  "category": {
+                    "enum": [
+                      "学习服务",
+                      "校园事务",
+                      "校园生活"
+                    ]
+                  }
+                },
+                "required": [
+                  "name",
+                  "description",
+                  "category"
+                ]
+              }
+            },
+            "required": [
+              "operation",
+              "value"
+            ]
+          }
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 20
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "$ref": "urn:campus:application-design:v1:application#/$defs/id"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 500
+          },
+          "blocking": {
+            "const": true
+          },
+          "suggested_answers": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "minItems": 0,
+            "maxItems": 5
+          }
+        },
+        "required": [
+          "id",
+          "text",
+          "blocking",
+          "suggested_answers"
+        ]
+      },
+      "minItems": 0,
+      "maxItems": 10
+    }
+  },
+  "required": [
+    "protocol_version",
+    "profile",
+    "request_id",
+    "application_id",
+    "base_revision",
+    "base_content_hash",
+    "catalog_hash",
+    "status",
+    "summary",
+    "operations",
+    "questions"
+  ],
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "proposed"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "operations": {
+            "minItems": 1
+          },
+          "questions": {
+            "maxItems": 0
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "operations": {
+            "maxItems": 0
+          },
+          "questions": {
+            "minItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

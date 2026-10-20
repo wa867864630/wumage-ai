@@ -1,0 +1,11 @@
+{
+  "dataset": "replace-with-frozen-dataset-name",
+  "source": "template-only-not-real-user-evidence",
+  "date": "2026-10-20",
+  "cases": [
+    {"text": "明天课表", "start": "2026-10-21", "end": "2026-10-21"},
+    {"text": "本周课表", "start": "2026-10-19", "end": "2026-10-25"},
+    {"text": "周五课表", "start": null, "end": null},
+    {"text": "今天和明天课表", "start": null, "end": null}
+  ]
+}
