@@ -18,15 +18,24 @@ from app.modules.config.store import state, releases, audit, outbox
 from app.modules.config.application_store import applications
 from app.modules.config.question_library import questions
 from app.modules.skills.business import students, schedule
+from app.modules.intent.requirements import tasks, commands
+from app.modules.forms.runtime import records as form_records
+from app.modules.approvals.runtime import instances as approval_instances
+from app.modules.forms.drafts import drafts as business_drafts
+from app.modules.config.lifecycle import lifecycle
 
-TABLES = (students, schedule, applications, state, releases, audit, outbox, questions)
+TABLES = (students, schedule, applications, state, releases, audit, outbox, questions, tasks, commands, form_records, approval_instances, lifecycle, business_drafts)
+TASKS_V7 = sa.Table('assistant_requirement', sa.MetaData(), *[
+    sa.Column(column.name, column.type, primary_key=column.primary_key, nullable=column.nullable)
+    for column in tasks.columns if column.name not in ('business_kind', 'target_application_id')])
 MAX_BYTES = 64 * 1024 * 1024
 MAX_ROWS = 100000
 
 
-def migrations():
+def migrations(revision=LATEST_REVISION):
     return {name: record['sha256'] for name, record in inventory().items()
-        if name.startswith('apps/api/alembic/versions/') and name.endswith('.py')}
+        if name.startswith('apps/api/alembic/versions/') and name.endswith('.py')
+        and int(Path(name).name[:4]) <= int(revision[:4])}
 
 
 def encode_row(table, row):
@@ -58,10 +67,10 @@ def decode_row(table, row):
     return result
 
 
-def read_tables(connection):
+def read_tables(connection, selected=TABLES):
     result = {}
     total = 0
-    for table in TABLES:
+    for table in selected:
         rows = connection.execute(sa.select(table).order_by(*table.primary_key.columns).limit(MAX_ROWS + 1)).mappings().all()
         total += len(rows)
         if total > MAX_ROWS:
@@ -82,22 +91,37 @@ def snapshot(engine):
     return {'format': 'campus-application-backup-v1', 'created_at': datetime.now(timezone.utc).isoformat(),
         'revision': revision, 'source_digest': digest(canonical(inventory())), 'migrations': migrations(),
         'tables': rows, 'tables_digest': digest(canonical(rows)),
-        'scope': 'eight application tables only; excludes DB roles/extensions, local settings, model keys and caches'}
+        'scope': 'fourteen application tables only; excludes DB roles/extensions, local settings, model keys and caches'}
 
 
 def validate(value):
     if (not isinstance(value, dict) or value.get('format') != 'campus-application-backup-v1'
-            or value.get('revision') != LATEST_REVISION or value.get('migrations') != migrations()
+            or value.get('revision') not in ('0006_application_runtime', '0007_assistant_requirement', '0008_requirement_creation', '0009_form_records', '0010_approval_instances', LATEST_REVISION)
+            or value.get('migrations') != migrations(value['revision'])
             or not isinstance(value.get('tables'), dict)
-            or set(value['tables']) != {table.name for table in TABLES}
+            or set(value['tables']) != {table.name for table in tables_for(value['revision'])}
             or value.get('tables_digest') != digest(canonical(value['tables']))):
         raise BaselineError('Snapshot format, migration or integrity mismatch')
     if sum(len(rows) for rows in value['tables'].values()) > MAX_ROWS:
         raise BaselineError('Snapshot row budget exceeded')
-    for table in TABLES:
+    for table in tables_for(value['revision']):
         for row in value['tables'][table.name]:
             decode_row(table, row)
     return value
+
+
+def tables_for(revision):
+    if revision == '0006_application_runtime':
+        return TABLES[:8]
+    if revision == '0007_assistant_requirement':
+        return (*TABLES[:8], TASKS_V7)
+    if revision == '0008_requirement_creation':
+        return TABLES[:10]
+    if revision == '0009_form_records':
+        return TABLES[:11]
+    if revision == '0010_approval_instances':
+        return TABLES[:12]
+    return TABLES
 
 
 def save(value, folder):
@@ -157,13 +181,14 @@ def restore_drill(value, engine):
                     spec.loader.exec_module(module)
                     with Operations.context(MigrationContext.configure(connection)):
                         module.upgrade()
-                for table in reversed(TABLES):
+                selected = tables_for(value['revision'])
+                for table in reversed(selected):
                     connection.execute(table.delete())
-                for table in TABLES:
+                for table in selected:
                     rows = [decode_row(table, row) for row in value['tables'][table.name]]
                     if rows:
                         connection.execute(table.insert(), rows)
-                restored = read_tables(connection)
+                restored = read_tables(connection, selected)
                 if restored != value['tables']:
                     raise BaselineError('Restored rows differ from snapshot')
                 # Stamp only the newly created schema, never the original database schema.

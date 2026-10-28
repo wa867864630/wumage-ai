@@ -118,6 +118,8 @@ class QuestionLibrary:
     def add(self, commands, trace_id, *, source='manual', expected_draft_revision=None, generation_info=None):
         with self.store.engine.begin() as connection:
             row = self.store._state(connection, lock=True)
+            from app.modules.config.lifecycle import assert_editable
+            assert_editable(connection, self.store.tenant_id, self.store.application_id)
             if expected_draft_revision is not None and row['revision'] != expected_draft_revision:
                 raise Conflict('生成期间草稿已变化，请重新生成。')
             inserted = 0
@@ -141,6 +143,8 @@ class QuestionLibrary:
     def change(self, question_id, command, trace_id):
         with self.store.engine.begin() as connection:
             row = self.store._state(connection, lock=True)
+            from app.modules.config.lifecycle import assert_editable
+            assert_editable(connection, self.store.tenant_id, self.store.application_id)
             existing = connection.execute(sa.select(questions).where(*self.scoped(question_id))).mappings().first()
             if existing is None or existing['status'] == 'deleted':
                 raise APIError(404, 'QUESTION_NOT_FOUND', '问法不存在。')

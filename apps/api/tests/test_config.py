@@ -67,7 +67,7 @@ class PostgresConfigTests(unittest.TestCase):
         self.addCleanup(self.cleanup_schema)
         with self.engine.begin() as connection:
             self.assertEqual(connection.scalar(sa.text('SELECT current_schema()')), self.schema)
-            for name in ('0001_config.py', '0002_mvp.py', '0003_biz_schedule.py', '0004_question_library.py', '0005_applications.py', '0006_application_runtime.py'):
+            for name in ('0001_config.py', '0002_mvp.py', '0003_biz_schedule.py', '0004_question_library.py', '0005_applications.py', '0006_application_runtime.py', '0007_assistant_requirement.py', '0008_requirement_creation.py', '0009_form_records.py', '0010_approval_instances.py', '0011_work_drafts_lifecycle.py'):
                 path = Path(__file__).resolve().parents[1] / 'alembic/versions' / name
                 spec = importlib.util.spec_from_file_location('config_migration', path)
                 migration = importlib.util.module_from_spec(spec)

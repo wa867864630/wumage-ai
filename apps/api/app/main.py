@@ -67,6 +67,14 @@ from app.modules.config.application_routes import router as application_manageme
 app.include_router(application_management_router)
 from app.modules.intent.application_router import router as assistant_router
 app.include_router(assistant_router)
+from app.modules.intent.requirements import router as requirement_router
+app.include_router(requirement_router)
+from app.modules.intent.construction_ai import router as construction_ai_router
+app.include_router(construction_ai_router)
+from app.modules.config.lifecycle import router as lifecycle_router
+app.include_router(lifecycle_router)
+from app.modules.unified_editor.routes import router as form_router
+app.include_router(form_router)
 from app.modules.deployment.routes import router as deployment_router
 app.include_router(deployment_router)
 
@@ -211,6 +219,7 @@ async def fetch_schedule(request: Request, start: date, end: date, provider: Sch
                          routing: Routing | None = None, config=None, principal=None):
     principal = principal or require_schedule(request)
     if config is None:
+        await run_in_threadpool(require_active_application, None, principal)
         started = time.perf_counter()
         with span('config.read'):
             config = await run_in_threadpool(published_config, principal)
@@ -237,6 +246,7 @@ async def natural_query(command: QueryRequest, request: Request,
                         provider: Annotated[ScheduleProvider, Depends(get_provider)],
                         principal: Annotated[Principal, Depends(require_schedule)]):
     check_rate(principal)
+    await run_in_threadpool(require_active_application, None, principal)
     started = time.perf_counter()
     with span('config.read'):
         config = await run_in_threadpool(published_config, principal)
@@ -280,7 +290,20 @@ async def run_natural_query(command, request, provider, principal, config, appli
     return result.model_copy(update={'ai_used': ai_used, 'ai_duration_ms': round(ai_ms, 1)})
 
 
+def require_active_application(application_id, principal):
+    from app.settings import database_is_configured
+    if database_is_configured():
+        from app.modules.config.routes import execute
+        from app.modules.config.lifecycle import assert_active
+        from app.modules.config.store import LEGACY_APPLICATION_ID
+        def check(store):
+            with store.engine.connect() as connection:
+                assert_active(connection, store.tenant_id, str(application_id) if application_id else LEGACY_APPLICATION_ID)
+        execute(check, principal)
+
+
 def application_snapshot(application_id, principal):
+    require_active_application(application_id, principal)
     from app.modules.config.routes import execute
     from app.modules.config.application_store import ApplicationStore
     config = execute(lambda store: ApplicationStore(store).config_store(str(application_id)).current(), principal)

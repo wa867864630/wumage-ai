@@ -16,6 +16,7 @@ class ResolveApplication(BaseModel):
     text: str = Field(min_length=1, max_length=200)
     current_application_id: str | None = Field(default=None, max_length=36)
     selected_application_id: str | None = Field(default=None, max_length=36)
+    construction_subject: str | None = Field(default=None, max_length=80)
 
 
 class Candidate(BaseModel):
@@ -42,6 +43,9 @@ class ApplicationResolution(BaseModel):
     feature_actions: list[FeatureAction] = []
     target: Literal['admin'] | None = None
     tab: Literal['basic', 'page', 'questions', 'history'] = 'basic'
+    construction_subject: str | None = None
+    type_id: str | None = None
+    runtime_action: Literal['fill', 'records'] | None = None
 
 
 def key(value):
@@ -68,6 +72,10 @@ def name_matches(text, applications):
 def resolve_application(command, applications, admin=False):
     # Only the server-authorized catalog may be supplied here. Never use client catalog metadata.
     applications = list({app['id']: app for app in applications}.values())
+    # Choosing an existing candidate from a creation guide means inspect/use that app,
+    # never dispatch the original creation sentence as a course/model query.
+    if command.selected_application_id and re.search(r'创建|新建|搭建', key(command.text)):
+        command = command.model_copy(update={'text': '这个应用有哪些功能'})
     text = key(command.text)
     search = re.fullmatch(r'(?:请|帮我)?(?:搜索|查找|寻找)(?:一下)?(?:应用)?[：: ]*(.*)', text)
     if search:
@@ -83,8 +91,48 @@ def resolve_application(command, applications, admin=False):
             message = '没有找到可访问的匹配应用，可以换个关键词或说“有哪些应用”。' if search else '当前身份暂无可用应用，请联系管理员确认发布状态和访问范围。'
         return ApplicationResolution(status='reset', message=message, candidates=choices)
     matches = name_matches(text, applications)
+    # Cross-business requests must not fall through to the currently selected course application.
+    # This is a narrow declared vocabulary, not model-generated executable capability discovery.
+    construction = bool(re.search(r'创建|新建|搭建', text))
+    subject_match = re.search(r'请假|采购|场地预约|访问申请|活动报名', text)
+    course_construction = construction and bool(re.search(r'课表|课程', text))
+    form_construction = construction and bool(re.search(r'登记|表单|填表', text))
+    semantic_matches = False
+    if not construction and not matches:
+        wanted = 'platform.leave-approval' if subject_match and subject_match[0] == '请假' else 'platform.form' if re.search(r'登记|填表|表单', text) else None
+        current_app = next((app for app in applications if app['id'] == command.current_application_id), None)
+        if (not wanted and not command.selected_application_id and current_app
+                and current_app.get('type_id') in ('platform.form', 'platform.leave-approval')
+                and re.search(r'课表|课程|上课', text)
+                and not re.search(r'打开|进入|切换|(?:用|通过|在).+(?:应用|助手|服务)', text)
+                and resolve_course(text, campus_today()).status == 'resolved'):
+            wanted = 'campus.course-query'
+        if wanted:
+            eligible = [app for app in applications if app.get('type_id', 'campus.course-query') == wanted]
+            current = next((app for app in eligible if app['id'] == command.current_application_id), None)
+            matches = [current] if current else eligible
+            semantic_matches = bool(matches)
+    if (not matches or course_construction or form_construction) and not command.selected_application_id and (subject_match or construction):
+        if re.search(r'不要|别|不想|无需|取消', text):
+            return ApplicationResolution(status='unsupported', message='没有创建应用或保存建设需求。')
+        reference = re.fullmatch(r'(?:请|帮我|我要|我想)?(?:创建|新建|搭建)(?:这个|该)应用[。！! ]*', text)
+        subject = subject_match[0] if subject_match else '课程查询' if course_construction else '简单登记' if form_construction else command.construction_subject if reference else None
+        if not subject:
+            if admin:
+                return ApplicationResolution(status='navigation', target='admin', message='请在应用工作台选择已安装类型与模板。尚未安装的业务，请先描述具体需求。')
+            return ApplicationResolution(status='unsupported', message='应用建设需要管理员处理，你可以使用已授权的应用。')
+        if not admin:
+            return ApplicationResolution(status='unsupported', message=f'当前没有可访问的“{subject}”服务，请联系管理员确认服务与访问范围。')
+        from app.modules.approvals.adapter import enabled as approvals_enabled
+        leave_available = subject == '请假' and approvals_enabled()
+        return ApplicationResolution(status='clarification', construction_subject=subject,
+            message='可以先完善登记建设需求，再选择已启用模板、确认创建并配置发布；也可以选择已有登记应用。' if subject == '简单登记' else
+                '课程查询类型已安装。可以先完善建设需求，再选择模板、确认创建并配置发布；也可以继续使用已有课程应用。' if subject == '课程查询' else
+                '单级请假类型已启用，可以完善建设需求并选择请假模板；发布后由已认证发布管理员审批。' if leave_available else
+                f'当前没有可用的“{subject}”应用类型。可以先保存建设需求，接入对应能力后再创建应用；保存需求不会发布应用。',
+            candidates=[candidate for candidate in choices if any(app['id'] == candidate.id and app.get('type_id', 'campus.course-query') == ('platform.form' if subject == '简单登记' else 'campus.course-query') for app in applications)] if subject in ('课程查询', '简单登记') else [])
     # A generic question can itself be an application name. Do not mistake it for an explicit switch.
-    if resolve_course(text, campus_today()).status == 'resolved':
+    if not semantic_matches and resolve_course(text, campus_today()).status == 'resolved':
         matches = []
     intent_text = text
     for app in matches:
@@ -121,6 +169,8 @@ def resolve_application(command, applications, admin=False):
         # No default schedule app. A generic capability request must first disambiguate instances.
         if re.search(r'课表|课程|上课|今天|明天|后天|本周|下周|今日|明日|星期|礼拜', text):
             eligible = [a for a in applications if a.get('type_id', 'campus.course-query') == 'campus.course-query']
+        elif re.search(r'登记|填表|表单', text):
+            eligible = [a for a in applications if a.get('type_id') == 'platform.form']
         elif management or command.selected_application_id:
             eligible = applications
         else:
@@ -135,6 +185,26 @@ def resolve_application(command, applications, admin=False):
         residual = strip_names(text, selected).strip('：:，, ')
         residual = re.sub(r'^(?:请|帮我|我想|我要|打开|进入|使用|切换到|切到|切换|用|通过|在)+', '', residual).lstrip('：:，, ')
         residual = re.sub(r'^(?:里面|里|中)(?=查|看|今天|明天|后天|本周|下周)', '', residual)
+    if selected.get('type_id') in ('platform.form', 'platform.leave-approval'):
+        is_approval = selected['type_id'] == 'platform.leave-approval'
+        base = {'application_id': selected['id'], 'application_name': selected['name'], 'type_id': selected['type_id']}
+        if management:
+            return ApplicationResolution(status='navigation', target='admin', tab='questions' if re.search(r'记录|数据', residual) else 'page' if re.search(r'字段|表单|页面', residual) else 'basic',
+                message=f"已定位“{selected['name']}”的表单管理入口。", **base)
+        if selected.get('usable') is False:
+            return ApplicationResolution(status='navigation', target='admin', message='应用尚未开放给此身份，请先完成配置和访问范围核对。', **base)
+        if re.search(r'课表|课程|采购|发邮件|运行命令', residual) or not is_approval and re.search(r'审批', residual):
+            return ApplicationResolution(status='unsupported', message='当前应用是登记表单，请先切换到对应业务应用。', **base)
+        if is_approval:
+            actions = [FeatureAction(id='leave-fill', label='填写请假申请', text='填写请假申请'), FeatureAction(id='leave-progress', label='我的申请进度', text='查看我的申请进度')]
+            if admin:
+                actions.append(FeatureAction(id='leave-work', label='审批待办', text='查看审批待办'))
+            return ApplicationResolution(status='selected', message=f"已打开“{selected['name']}”。可提交请假、查看进度，待审时可撤回；审批需有效管理员身份。",
+                runtime_action='records' if re.search(r'进度|记录|待办|处理|通过|拒绝|撤回', residual) else 'fill',
+                features=['填写申请', '查看本人进度', '待审撤回'] + (['查看审批待办'] if admin else []), feature_actions=actions, **base)
+        return ApplicationResolution(status='selected', message=f"已打开“{selected['name']}”，可填写登记或查看本人记录。",
+            runtime_action='records' if re.search(r'记录|已提交|结果', residual) else 'fill', features=['填写登记', '查看本人记录'],
+            feature_actions=[FeatureAction(id='form-fill', label='填写登记', text='填写登记表'), FeatureAction(id='form-records', label='我的登记记录', text='查看我的登记记录')], **base)
     features = ['查询本人课表', '按日期查询', '查看应用功能']
     actions = [FeatureAction(id='query-today', label='查询今天课表', text='今天课表'),
         FeatureAction(id='query-week', label='查询本周课表', text='本周课表'),

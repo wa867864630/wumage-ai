@@ -30,9 +30,11 @@ def process_one(engine):
     try:
         if cache_enabled():
             with engine.connect() as connection:
-                content = connection.execute(sa.select(releases.c.content).where(
-                    releases.c.id == event['release_id'], releases.c.tenant_id == event['tenant_id'], releases.c.application_id == event['application_id'])).scalar_one()
-            if not write_cache(event['tenant_id'], event['release_id'], content, event['application_id']):
+                release = connection.execute(sa.select(releases.c.content, releases.c.runtime_binding).where(
+                    releases.c.id == event['release_id'], releases.c.tenant_id == event['tenant_id'], releases.c.application_id == event['application_id'])).mappings().one()
+            # Non-course adapters currently read immutable releases directly from the DB.
+            uses_course_cache = not release['runtime_binding'] or release['runtime_binding'].get('type_id') == 'campus.course-query'
+            if uses_course_cache and not write_cache(event['tenant_id'], event['release_id'], release['content'], event['application_id']):
                 raise RuntimeError('cache_unavailable')
         # With caching disabled, the committed DB pointer alone completes delivery.
     except Exception as exc:

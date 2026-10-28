@@ -3,7 +3,7 @@
   "platform_version": "0.2.0",
   "channel": "development",
   "production_release": false,
-  "baseline_stage": "P0",
-  "database_revision": "0006_application_runtime",
+  "baseline_stage": "P1-P6-mvp",
+  "database_revision": "0011_work_drafts_lifecycle",
   "notes": "Declared development version; source/archive digests and verification evidence are generated separately."
 }

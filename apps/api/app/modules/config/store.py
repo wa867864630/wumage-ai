@@ -76,11 +76,18 @@ class NotFound(Exception):
 
 
 class ConfigStore:
-    def __init__(self, engine, tenant_id=TENANT, actor_id='local-admin', application_id=LEGACY_APPLICATION_ID):
+    def __init__(self, engine, tenant_id=TENANT, actor_id='local-admin', application_id=LEGACY_APPLICATION_ID, adapter=None):
         self.engine = engine
         self.tenant_id = tenant_id
         self.actor_id = actor_id
         self.application_id = application_id
+        self.adapter = adapter
+
+    def normalize(self, content):
+        return (self.adapter.model if self.adapter else DisplayConfig).model_validate(content).model_dump()
+
+    def defaults(self):
+        return (self.adapter.defaults() if self.adapter else default_config()).model_dump()
 
     def _state(self, connection, lock=False):
         query = sa.select(state).where(state.c.tenant_id == self.tenant_id, state.c.application_id == self.application_id, state.c.key == KEY)
@@ -95,7 +102,7 @@ class ConfigStore:
         # One transaction captures a release ID; immutable contents cannot change underneath it.
         with self.engine.connect() as connection:
             from app.modules.config.cache import cache_enabled, read_cache, write_cache
-            use_cache = cache_enabled()
+            use_cache = cache_enabled() and self.adapter is None
             columns = [state.c.current_release_id, releases.c.content_hash, releases.c.runtime_binding]
             if not use_cache:
                 columns.append(releases.c.content)
@@ -106,7 +113,7 @@ class ConfigStore:
             if row is None:
                 raise NotFound('当前组织尚未初始化配置，请联系管理员。')
             release_id = row['current_release_id']
-            content = default_config().model_dump()
+            content = self.defaults()
             if release_id:
                 self.validate_runtime(row['runtime_binding'])
                 if not row['content_hash']:
@@ -118,13 +125,15 @@ class ConfigStore:
                         releases.c.key == KEY)).scalar_one()
                     write_cache(self.tenant_id, release_id, content, self.application_id)
             return {'release_id': release_id,
-                    'content': DisplayConfig.model_validate(content).model_dump(), 'source': self.engine.dialect.name}
+                    'content': self.normalize(content), 'source': self.engine.dialect.name}
 
     def validate_runtime(self, binding):
+        if self.adapter:
+            return self.adapter.validate_runtime(self.application_id, binding)
         from app.modules.config.type_registry import require_type, BINDING_ID
         if binding is None and self.application_id == LEGACY_APPLICATION_ID:
             return  # Existing immutable course snapshots keep their original bytes.
-        if not binding or binding.get('application_id') != self.application_id or binding.get('binding_id') != BINDING_ID:
+        if not isinstance(binding, dict) or binding.get('application_id') != self.application_id or binding.get('binding_id') != BINDING_ID:
             raise Conflict('发布版本的应用或数据能力绑定无效。')
         if not isinstance(binding.get('type_digest'), str) or len(binding['type_digest']) != 64:
             raise Conflict('发布版本缺少完整类型摘要。')
@@ -136,7 +145,7 @@ class ConfigStore:
         with self.engine.connect() as connection:
             row = self._state(connection)
             return {'revision': row['revision'], 'current_release_id': row['current_release_id'],
-                    'content': DisplayConfig.model_validate(row['draft']).model_dump()}
+                    'content': self.normalize(row['draft'])}
 
     def _audit(self, connection, action, revision, trace_id, release_id=None, before=None, after=None, audit_id=None):
         connection.execute(audit.insert().values(id=audit_id or str(uuid4()), tenant_id=self.tenant_id, application_id=self.application_id,
@@ -146,14 +155,29 @@ class ConfigStore:
     def save(self, command, trace_id):
         with self.engine.begin() as connection:
             row = self._state(connection, lock=True)
+            request_key = getattr(command, 'idempotency_key', None)
+            command_id = str(uuid5(NAMESPACE_URL, json.dumps([self.tenant_id, self.actor_id, self.application_id, 'save_draft', request_key]))) if request_key else None
+            fingerprint = digest(command.model_dump(exclude={'idempotency_key'})) if request_key else None
+            if command_id:
+                previous = connection.execute(sa.select(audit.c.after_json).where(audit.c.id == command_id,
+                    audit.c.tenant_id == self.tenant_id, audit.c.application_id == self.application_id,
+                    audit.c.actor_id == self.actor_id, audit.c.action == 'save_typed_draft')).scalar_one_or_none()
+                if previous is not None:
+                    if previous['request_hash'] != fingerprint:
+                        raise Conflict('同一暂存请求号不能用于不同内容。')
+                    return {**previous['result'], 'replayed': True}
             if row['revision'] != command.expected_revision:
                 raise Conflict('草稿已更新，请重新加载后编辑。')
+            from app.modules.config.lifecycle import assert_editable
+            assert_editable(connection, self.tenant_id, self.application_id)
             revision = row['revision'] + 1
-            content = command.content.model_dump()
+            content = self.normalize(command.content.model_dump())
             connection.execute(state.update().where(state.c.tenant_id == self.tenant_id, state.c.application_id == self.application_id, state.c.key == KEY)
                                .values(draft=content, revision=revision))
-            self._audit(connection, 'save_draft', revision, trace_id, before=row['draft'], after=content)
-            return {'revision': revision, 'current_release_id': row['current_release_id'], 'content': content}
+            response = {'revision': revision, 'current_release_id': row['current_release_id'], 'content': content}
+            self._audit(connection, 'save_typed_draft' if command_id else 'save_draft', revision, trace_id, before=row['draft'],
+                after={'content': content, 'request_hash': fingerprint, 'result': response} if command_id else content, audit_id=command_id)
+            return response
 
     def accept_course_proposal(self, command, trace_id):
         """Reuse durable audit + draft lock for atomic, tenant/actor-scoped acceptance."""
@@ -173,6 +197,8 @@ class ConfigStore:
                 if previous['request_hash'] != fingerprint:
                     raise Conflict('同一接受请求号不能用于不同提案。')
                 return {**previous['result'], 'replayed': True}
+            from app.modules.config.lifecycle import assert_editable
+            assert_editable(connection, self.tenant_id, self.application_id)
             draft = {'revision': row['revision'], 'content': DisplayConfig.model_validate(row['draft']).model_dump()}
             result = evaluate(command.proposal, draft)
             if not result['can_accept']:
@@ -202,6 +228,8 @@ class ConfigStore:
             if (row['revision'] != command.expected_revision or
                     row['current_release_id'] != command.expected_release_id):
                 raise Conflict('草稿或发布版本已变化，请重新加载。')
+            from app.modules.config.lifecycle import assert_editable
+            assert_editable(connection, self.tenant_id, self.application_id)
             content = row['draft']
             if rollback:
                 target = connection.execute(sa.select(releases.c.content, releases.c.runtime_binding).where(
@@ -211,22 +239,27 @@ class ConfigStore:
                     raise NotFound('回滚目标不存在。')
                 self.validate_runtime(target['runtime_binding'])
                 content = target['content']
-            content = DisplayConfig.model_validate(content).model_dump()
-            before = default_config().model_dump()
+            content = self.normalize(content)
+            before = self.defaults()
             if row['current_release_id']:
                 before = connection.execute(sa.select(releases.c.content).where(
                     releases.c.id == row['current_release_id'], releases.c.tenant_id == self.tenant_id, releases.c.application_id == self.application_id,
                     releases.c.key == KEY)).scalar_one()
             from app.modules.config.review import review
             # Regress against immutable built-in behavior, so an older custom rule can be removed or rolled back.
-            if not review(default_config(), DisplayConfig.model_validate(content))['can_publish']:
+            if self.adapter:
+                self.adapter.validate_publish(content)
+            elif not review(default_config(), DisplayConfig.model_validate(content))['can_publish']:
                 raise Conflict('固定问句回归失败，请修复规则后发布。')
             release_id = str(uuid4())
-            from app.modules.config.type_registry import course_type, BINDING_ID
-            installed = course_type()
-            binding = {'application_id': self.application_id, 'type_id': installed['type_id'],
-                'type_version': installed['type_version'], 'type_digest': installed['type_digest'],
-                'binding_id': BINDING_ID, 'capability_contract': 'course.schedule.read@1'}
+            if self.adapter:
+                binding = self.adapter.runtime_binding(self.application_id, self.actor_id)
+            else:
+                from app.modules.config.type_registry import course_type, BINDING_ID
+                installed = course_type()
+                binding = {'application_id': self.application_id, 'type_id': installed['type_id'],
+                    'type_version': installed['type_version'], 'type_digest': installed['type_digest'],
+                    'binding_id': BINDING_ID, 'capability_contract': 'course.schedule.read@1'}
             connection.execute(releases.insert().values(id=release_id, tenant_id=self.tenant_id, application_id=self.application_id, key=KEY,
                 content=content, content_hash=digest(content), runtime_binding=binding, created_at=datetime.now(timezone.utc),
                 actor_id=self.actor_id, operation='rollback' if rollback else 'publish',

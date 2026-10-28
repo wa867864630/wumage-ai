@@ -1,0 +1,637 @@
+{
+  "$defs": {
+    "ApplicationInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "default": "学习服务",
+          "enum": [
+            "学习服务",
+            "校园事务",
+            "校园生活"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "default": "一句话查询课程，随时掌握每天的学习安排。",
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "default": "课表助手",
+          "maxLength": 30,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "visible_roles": {
+          "items": {
+            "enum": [
+              "student",
+              "teacher",
+              "config_admin"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Visible Roles",
+          "type": "array"
+        }
+      },
+      "title": "ApplicationInfo",
+      "type": "object"
+    },
+    "ApprovalForm": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/Section"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "title": "Sections",
+          "type": "array"
+        },
+        "submit_action_id": {
+          "const": "approval.apply",
+          "title": "Submit Action Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "model_id",
+        "sections",
+        "submit_action_id"
+      ],
+      "title": "ApprovalForm",
+      "type": "object"
+    },
+    "ApprovalNode": {
+      "additionalProperties": false,
+      "properties": {
+        "actor": {
+          "$ref": "#/$defs/PublisherActor"
+        },
+        "allow_self_approval": {
+          "const": false,
+          "title": "Allow Self Approval",
+          "type": "boolean"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "on_approve": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "On Approve",
+          "type": "string"
+        },
+        "on_missing_actor": {
+          "const": "block",
+          "title": "On Missing Actor",
+          "type": "string"
+        },
+        "on_reject": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "On Reject",
+          "type": "string"
+        },
+        "type": {
+          "const": "approval",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "name",
+        "actor",
+        "allow_self_approval",
+        "on_missing_actor",
+        "on_approve",
+        "on_reject"
+      ],
+      "title": "ApprovalNode",
+      "type": "object"
+    },
+    "Constraints": {
+      "additionalProperties": false,
+      "properties": {
+        "max_length": {
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Max Length",
+          "type": "integer"
+        },
+        "maximum": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "title": "Maximum",
+          "type": "number"
+        },
+        "minimum": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "title": "Minimum",
+          "type": "number"
+        },
+        "precision": {
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "integer"
+        }
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "Control": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "text",
+            "textarea",
+            "number",
+            "checkbox",
+            "select",
+            "multiselect",
+            "date"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "field_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Field Id",
+          "type": "string"
+        },
+        "help": {
+          "maxLength": 300,
+          "title": "Help",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "layout": {
+          "$ref": "#/$defs/Layout"
+        },
+        "readonly": {
+          "const": false,
+          "default": false,
+          "title": "Readonly",
+          "type": "boolean"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "field_id",
+        "component",
+        "label",
+        "help",
+        "required",
+        "layout"
+      ],
+      "title": "Control",
+      "type": "object"
+    },
+    "DataField": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "$ref": "#/$defs/Constraints"
+        },
+        "data_type": {
+          "enum": [
+            "string",
+            "integer",
+            "decimal",
+            "boolean",
+            "date",
+            "enum",
+            "enum_list"
+          ],
+          "title": "Data Type",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "key": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "nullable": {
+          "title": "Nullable",
+          "type": "boolean"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/Option"
+          },
+          "maxItems": 20,
+          "title": "Options",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "label",
+        "data_type",
+        "nullable",
+        "constraints",
+        "options"
+      ],
+      "title": "DataField",
+      "type": "object"
+    },
+    "DataModel": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter_id": {
+          "const": "form.records",
+          "title": "Adapter Id",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/DataField"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "adapter_id",
+        "fields"
+      ],
+      "title": "DataModel",
+      "type": "object"
+    },
+    "End": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "outcome": {
+          "enum": [
+            "approved",
+            "rejected"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        },
+        "type": {
+          "const": "end",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "outcome"
+      ],
+      "title": "End",
+      "type": "object"
+    },
+    "Layout": {
+      "additionalProperties": false,
+      "properties": {
+        "desktop": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Desktop",
+          "type": "integer"
+        },
+        "mobile": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Mobile",
+          "type": "integer"
+        },
+        "tablet": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Tablet",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mobile",
+        "tablet",
+        "desktop"
+      ],
+      "title": "Layout",
+      "type": "object"
+    },
+    "Option": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "title": "Option",
+      "type": "object"
+    },
+    "PublisherActor": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "relation",
+          "title": "Kind",
+          "type": "string"
+        },
+        "resolver_id": {
+          "const": "identity.application-publisher",
+          "title": "Resolver Id",
+          "type": "string"
+        },
+        "selection": {
+          "const": "exactly_one",
+          "title": "Selection",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "resolver_id",
+        "selection"
+      ],
+      "title": "PublisherActor",
+      "type": "object"
+    },
+    "Section": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/Control"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "fields"
+      ],
+      "title": "Section",
+      "type": "object"
+    },
+    "Start": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "next": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Next",
+          "type": "string"
+        },
+        "type": {
+          "const": "start",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "next"
+      ],
+      "title": "Start",
+      "type": "object"
+    },
+    "Withdrawal": {
+      "additionalProperties": false,
+      "properties": {
+        "action_id": {
+          "const": "approval.withdraw",
+          "title": "Action Id",
+          "type": "string"
+        },
+        "allowed_at_node_ids": {
+          "items": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "type": "string"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "title": "Allowed At Node Ids",
+          "type": "array"
+        }
+      },
+      "required": [
+        "allowed_at_node_ids",
+        "action_id"
+      ],
+      "title": "Withdrawal",
+      "type": "object"
+    },
+    "Workflow": {
+      "additionalProperties": false,
+      "properties": {
+        "entry_node_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Entry Node Id",
+          "type": "string"
+        },
+        "executor_id": {
+          "const": "approval.single",
+          "title": "Executor Id",
+          "type": "string"
+        },
+        "form_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Form Id",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "nodes": {
+          "items": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Start"
+              },
+              {
+                "$ref": "#/$defs/ApprovalNode"
+              },
+              {
+                "$ref": "#/$defs/End"
+              }
+            ]
+          },
+          "maxItems": 4,
+          "minItems": 4,
+          "title": "Nodes",
+          "type": "array"
+        },
+        "withdrawal": {
+          "$ref": "#/$defs/Withdrawal"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "model_id",
+        "form_id",
+        "executor_id",
+        "entry_node_id",
+        "nodes",
+        "withdrawal"
+      ],
+      "title": "Workflow",
+      "type": "object"
+    }
+  },
+  "$id": "urn:campus:application-types:v1:leave-config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "application": {
+      "$ref": "#/$defs/ApplicationInfo"
+    },
+    "form": {
+      "$ref": "#/$defs/ApprovalForm"
+    },
+    "model": {
+      "$ref": "#/$defs/DataModel"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "workflow": {
+      "$ref": "#/$defs/Workflow"
+    }
+  },
+  "required": [
+    "application",
+    "model",
+    "form",
+    "workflow"
+  ],
+  "title": "LeaveConfig",
+  "type": "object"
+}

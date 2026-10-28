@@ -18,6 +18,16 @@ APPS = [
 
 
 class ApplicationRoutingTests(unittest.TestCase):
+    def test_course_query_can_interrupt_form_but_unknown_explicit_reference_cannot(self):
+        apps = [*APPS, {'id': 'leave-app', 'type_id': 'platform.leave-approval', 'name': '请假申请'}]
+        result = self.route('今天课表', current='leave-app', apps=apps)
+        self.assertEqual(result.status, 'clarification')
+        self.assertEqual({item.id for item in result.candidates}, {item['id'] for item in APPS})
+        one = [APPS[0], apps[-1]]
+        result = self.route('今天课表', current='leave-app', apps=one)
+        self.assertEqual(result.status, 'query'); self.assertEqual(result.application_id, 'schedule')
+        result = self.route('打开不存在的应用查明天课表', current='leave-app', apps=one)
+        self.assertEqual(result.status, 'clarification'); self.assertIsNone(result.application_id)
     def route(self, text, current=None, selected=None, admin=False, apps=None):
         return resolve_application(ResolveApplication(text=text, current_application_id=current,
             selected_application_id=selected), APPS if apps is None else apps, admin)

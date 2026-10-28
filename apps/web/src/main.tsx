@@ -1,8 +1,12 @@
-import {useEffect, useRef, useState, type FormEvent} from 'react';
+import {useCallback, useEffect, useRef, useState, type FormEvent} from 'react';
 import {createRoot} from 'react-dom/client';
 import {ApplicationManagement} from './ApplicationManagement';
 import {AssistantTurn} from './AssistantTurn';
 import {Login} from './Login';
+import {RequirementPanel} from './RequirementPanel';
+import {FormRuntime} from './FormRuntime';
+import {ApprovalRuntime} from './ApprovalRuntime';
+import {MyWork, type WorkTarget} from './MyWork';
 import {api, SessionExpired, type Session} from './api';
 import type {ScheduleResponse} from './generated/contracts';
 import type {ApplicationResolution, ManagementLocation} from './assistant';
@@ -24,11 +28,24 @@ const today = () => new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Shanghai',
 export function Workspace({session, onLogout, initialPage}: {session: Session; onLogout: (notice?: string) => void; initialPage?: string}) {
   const [services, setServices] = useState<Service[]>(plannedServices.map(service => ({...service, ready: false})));
   const [activeApplication, setActiveApplication] = useState<string | null>(null);
-  const [managementLocation, setManagementLocation] = useState<ManagementLocation>({});
+  const [constructionSubject, setConstructionSubject] = useState<string | null>(null);
+  const [requirementsOpen, setRequirementsOpen] = useState(false);
+  const [requirementDirty, setRequirementDirty] = useState(false);
+  const [runtimeDirty, setRuntimeDirty] = useState(false);
+  const [runtimeMode, setRuntimeMode] = useState<'fill' | 'records'>('fill');
+  const [workOpen, setWorkOpen] = useState(false); const [workTarget, setWorkTarget] = useState<WorkTarget | null>(null);
+  const runtimePause = useRef<(() => Promise<boolean>) | null>(null);
+  const registerPause = useCallback((pause: (() => Promise<boolean>) | null) => {runtimePause.current = pause;}, []);
+  const [managementLocation, setManagementLocation] = useState<ManagementLocation>(() => {
+    if (typeof window === 'undefined') return {};
+    const params = new URLSearchParams(window.location.hash.split('?')[1] ?? '');
+    const valid = (value: string | null) => value && /^[a-f0-9-]{36}$/.test(value) ? value : undefined;
+    return {applicationId: valid(params.get('application')), taskId: valid(params.get('task'))};
+  });
   const [catalogError, setCatalogError] = useState('');
   const [editorDirty, setEditorDirty] = useState(false);
   const [page, setPage] = useState(() => {
-    const selected = initialPage ?? (typeof window !== 'undefined' && window.location.hash === '#workbench' ? 'admin' : 'chat');
+    const selected = initialPage ?? (typeof window !== 'undefined' && /^#workbench(?:\?|$)/.test(window.location.hash) ? 'admin' : 'chat');
     return ['admin', 'deployment', 'ai-model'].includes(selected) && !session.identity.roles.includes('config_admin') ? 'chat' : selected;
   });
   const [sidebar, setSidebar] = useState(false);
@@ -70,15 +87,15 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
   }, [session.token, onLogout]);
   useEffect(() => {bottom.current?.scrollIntoView({behavior: 'smooth', block: 'end'});}, [turns, busy]);
   function navigate(next: string) {
-    if (next !== page && editorDirty && !window.confirm('应用设计尚未暂存，离开将丢失这些修改。是否继续？')) return false;
+    if ((next !== page || next === 'chat') && (editorDirty || requirementDirty || runtimeDirty) && !window.confirm('当前有未保存或待核对的操作，是否离开？已保存内容可以恢复，待核对操作请保留原请求。')) return false;
     if (next === 'admin' && next !== page) setManagementLocation({});
     setPage(next); setSidebar(false);
     window.history.replaceState(null, '', window.location.pathname + window.location.search + (next === 'admin' ? '#workbench' : ''));
     return true;
   }
-  function newChat() {if (!busy && navigate('chat')) {setTurns([]); setText(''); setActiveApplication(null); setDates(false);}}
+  function newChat() {if (!busy && navigate('chat')) {setTurns([]); setText(''); setActiveApplication(null); setConstructionSubject(null); setDates(false);}}
   async function logout() {
-    if (editorDirty && !window.confirm('应用设计尚未暂存，确定退出？')) return;
+    if ((editorDirty || requirementDirty || runtimeDirty) && !window.confirm('当前有未保存或待核对操作，确定退出？')) return;
     setLoggingOut(true); setLogoutError(''); controller.current?.abort();
     try {if (session.token.startsWith('demo_')) await api('/api/v1/auth/demo/logout', session.token, {}); onLogout();}
     catch (cause) {setLogoutError(cause instanceof Error ? cause.message : '退出失败，请重试');}
@@ -93,6 +110,14 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
   async function runQuery(request: ScheduleQuery, retryId?: number) {
     if (busy || loggingOut || queryInFlight.current) return;
     queryInFlight.current = true;
+    if (runtimeDirty) {
+      const paused = await runtimePause.current?.();
+      if (!paused) {queryInFlight.current = false; return;}
+      setRuntimeDirty(false);
+    }
+    if (request.kind === 'text' && /^(?:打开|查看|返回|继续)?(?:我的工作|我的待办|刚才的任务|刚才|未完成任务|续填)[。！! ]*$/.test(request.text.trim())) {
+      setWorkOpen(true); setText(''); queryInFlight.current = false; return;
+    }
     const question = request.kind === 'dates' ? `${request.start} 至 ${request.end}的课表` : request.text;
     const id = retryId ?? Date.now(); const abort = new AbortController(); controller.current = abort;
     const timer = window.setTimeout(() => abort.abort(), 16000);
@@ -106,10 +131,13 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
         const resolution = await api<ApplicationResolution>('/api/v1/assistant/resolve', session.token, {
           text: request.text, current_application_id: request.applicationId ?? null,
           selected_application_id: request.selectedApplicationId ?? null,
+          construction_subject: constructionSubject,
         }, abort.signal);
+        if (resolution.construction_subject) setConstructionSubject(resolution.construction_subject);
+        if (resolution.runtime_action) {setRuntimeMode(resolution.runtime_action); setDates(false);}
         setTurns(current => current.map(turn => turn.id === id ? {...turn, resolution,
           applicationName: resolution.application_name ?? '校园助手', elapsedMs: performance.now() - queryStarted} : turn));
-        if (['selected', 'query'].includes(resolution.status) && resolution.application_id) setActiveApplication(resolution.application_id);
+        if (['selected', 'query'].includes(resolution.status) && resolution.application_id) {setActiveApplication(resolution.application_id); setConstructionSubject(null);}
         else if (['reset', 'clarification'].includes(resolution.status)) {setActiveApplication(null); setDates(false);}
         if (resolution.status !== 'query' || !resolution.application_id || !resolution.query_text) return;
         applicationId = resolution.application_id; queryText = resolution.query_text;
@@ -129,7 +157,21 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
   function useApplication(id: string) {
     if (busy || !navigate('chat')) return;
     setActiveApplication(id === '00000000-0000-4000-8000-000000000001' ? 'schedule' : id);
-    setTurns([]); setText('');
+    setTurns([]); setText(''); setDates(false); setRuntimeMode('fill'); setWorkTarget(null);
+  }
+  async function resumeWork(target: WorkTarget) {
+    if (busy || loggingOut || queryInFlight.current) return;
+    if (runtimeDirty && !await runtimePause.current?.()) return;
+    setRuntimeDirty(false); setWorkTarget(target); setActiveApplication(target.applicationId); setRuntimeMode(target.mode);
+    setDates(false); setWorkOpen(false); setPage('chat');
+  }
+  async function releaseApplication() {
+    if (busy || runtimeDirty && !await runtimePause.current?.()) return;
+    setRuntimeDirty(false); setActiveApplication(null); setDates(false);
+  }
+  function openConstruction() {
+    if (!navigate('chat')) return;
+    setConstructionSubject(null); setRequirementsOpen(true);
   }
   function openManagement(resolution: ApplicationResolution) {
     if (!admin || !navigate('admin')) return;
@@ -145,6 +187,8 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
   const scheduleApp = services.find(service => service.id === activeApplication && service.ready);
   const activeName = [...turns].reverse().find(turn => turn.resolution?.application_id === activeApplication &&
     ['query', 'selected'].includes(turn.resolution.status))?.applicationName ?? scheduleApp?.name;
+  const activeType = workTarget?.applicationId === activeApplication ? workTarget.typeId : [...turns].reverse().find(turn => turn.resolution?.application_id === activeApplication && turn.resolution.type_id)?.resolution?.type_id ?? scheduleApp?.type_id;
+  const starterPrompts = activeApplication ? activeType === 'platform.leave-approval' ? ['填写请假申请', '查看我的申请进度', '这个应用有哪些功能'] : activeType === 'platform.form' ? ['填写登记表', '查看我的登记记录', '这个应用有哪些功能'] : ['今天有什么课', '明天课表', '这个应用有哪些功能'] : ['有哪些应用', '今天有什么课', ...(admin ? ['打开应用工作台'] : ['选择一个应用'])];
   return <div className="workspace">
     {sidebar && <button className="sidebar-backdrop" aria-label="关闭导航" onClick={() => setSidebar(false)} />}
     <aside className={`sidebar ${sidebar ? 'open' : ''}`}><a className="wordmark" href="#" onClick={event => {event.preventDefault(); newChat();}}>✳ <span>校园智能工作台</span></a><div className="workspace-label">CAMPUS WORKSPACE <span>开发版</span></div>
@@ -155,11 +199,14 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
     </aside>
     <main className="workspace-main"><header className="topbar"><div><button className="menu-toggle" aria-label="打开导航" aria-expanded={sidebar} onClick={() => setSidebar(true)}>☰</button><span>{page === 'services' ? '微服务广场' : page === 'admin' ? '应用工作台' : page === 'ai-model' ? 'AI 模型配置' : page === 'deployment' ? '服务器部署' : '校园助手'} <span className="topbar-slash">/</span> <small>{page === 'chat' ? activeName ?? '全局应用匹配' : '校园智能工作台'}</small></span></div><span className="environment"><i />{session.identity.mode === 'demo' ? '演示环境' : '校园认证'}</span></header>
       {catalogError && <p role="alert" className="error">{catalogError}</p>}
+      {page === 'admin' && admin && managementLocation.taskId && <section className="panel requirement-context" aria-label="当前建设任务"><p>正在配置建设需求关联的应用。完成配置、试跑与发布后，可返回需求核对当前进度。</p><button onClick={() => {if (navigate('chat')) {setRequirementsOpen(true); setConstructionSubject(null);}}}>返回建设需求</button></section>}
       {page === 'services' ? <section className="service-page"><div className="overline">CAMPUS AGENTS</div><h1>每一件校园事，都有专属助手。</h1><p className="muted">校园微服务，以智能体的方式连接你与校园。</p><div className="service-tools"><div className="category-tabs">{['全部', '学习服务', '校园事务', '校园生活', ...(admin ? ['应用管理'] : [])].map(item => <button aria-pressed={category === item} key={item} onClick={() => setCategory(item)}>{item}</button>)}</div><label className="service-search"><span className="sr-only">搜索微服务</span><input placeholder="搜索微服务…" value={search} onChange={event => setSearch(event.target.value)} /></label></div><div className="service-grid">{visible.map(service => <article className={`service-card ${service.ready ? 'ready' : ''}`} key={service.id}><div className="service-card-top"><span className={`agent-icon ${service.id}`}>{service.icon}</span><span className={`status-tag ${service.ready ? 'available' : ''}`}>{service.category === '应用管理' ? '管理入口' : service.ready ? '已开通' : '待接入'}</span></div><h2>{service.name}</h2><span className="muted service-category">{service.category}</span><p>{service.desc}</p><button disabled={!service.ready || busy} onClick={() => {if (service.id === 'application-design') navigate('admin'); else if (service.id === 'ai-model-settings') navigate('ai-model'); else if (service.id === 'server-deployment') navigate('deployment'); else useApplication(service.id);}}>{service.category === '应用管理' ? '进入管理 ↗' : service.ready ? '使用微服务 ↗' : '暂未开放'}</button></article>)}</div>{!visible.length && <p className="empty-state">没有匹配的微服务，请更换关键词。</p>}<p className="footnote">“微服务”为校园应用名称。待接入项目仅展示规划，不提供申请、审批或预约功能。</p></section>
-      : (page === 'admin' || page === 'deployment' || page === 'ai-model') && admin ? <div className={`admin-page ${page === 'admin' ? 'workbench-page' : ''}`}><div className="page-heading"><div><div className="overline" hidden={page === 'admin'}>APPLICATION MANAGEMENT</div><h1>{page === 'ai-model' ? '配置模型，辅助应用设计。' : page === 'deployment' ? '连接服务器，先检查再操作。' : '应用工作台'}</h1><p className="muted">{page === 'admin' ? '选择应用，配置、试跑并发布。' : '应用发布立即生效；服务器部署是独立运维能力。'}</p></div><button onClick={() => navigate('services')}>返回微服务广场</button></div><ApplicationManagement location={managementLocation} onUse={useApplication} key={page} initialToken={session.token} deployment={page === 'deployment'} aiModel={page === 'ai-model'} onDirtyChange={setEditorDirty} onSessionExpired={() => onLogout('登录已过期，请重新登录。')} /></div>
+      : (page === 'admin' || page === 'deployment' || page === 'ai-model') && admin ? <div className={`admin-page ${page === 'admin' ? 'workbench-page' : ''}`}><div className="page-heading"><div><div className="overline" hidden={page === 'admin'}>APPLICATION MANAGEMENT</div><h1>{page === 'ai-model' ? '配置模型，辅助应用设计。' : page === 'deployment' ? '连接服务器，先检查再操作。' : '应用工作台'}</h1><p className="muted">{page === 'admin' ? '选择应用，配置、试跑并发布。' : '应用发布立即生效；服务器部署是独立运维能力。'}</p></div><button onClick={() => navigate('services')}>返回微服务广场</button></div><ApplicationManagement location={managementLocation} onUse={useApplication} onOpenRequirements={openConstruction} key={page} initialToken={session.token} deployment={page === 'deployment'} aiModel={page === 'ai-model'} onDirtyChange={setEditorDirty} onSessionExpired={() => onLogout('登录已过期，请重新登录。')} /></div>
       : <div className={`chat-page ${turns.length ? 'has-turns' : ''}`}>
         {!turns.length && <section className="welcome"><div className="welcome-mark">✳</div><div className="overline">YOUR CAMPUS COMPANION</div><h1>{session.name}，今天想办理什么？</h1><p>先找到应用，再使用功能。可以说“有哪些应用”或“打开某个应用”。</p></section>}
         <div className="assistant-context" aria-label="当前应用"><span>{activeApplication ? `已锁定：${activeName ?? activeApplication}` : '校园助手 · 自动匹配应用'}</span>
+            <button className="quiet-button" disabled={busy} onClick={() => setWorkOpen(true)}>我的工作</button>
+          {admin && <button className="quiet-button" onClick={() => setRequirementsOpen(true)}>我的建设需求</button>}
           {activeApplication && <button className="quiet-button" disabled={busy} onClick={() => void runQuery({kind: 'text', text: '这个应用有哪些功能',
             applicationId: activeApplication, selectedApplicationId: activeApplication})}>查看功能</button>}
           {activeApplication && <button className="quiet-button" disabled={busy} onClick={() => {setActiveApplication(null); setDates(false);}}>切换应用</button>}</div>
@@ -168,11 +215,23 @@ export function Workspace({session, onLogout, initialPage}: {session: Session; o
           onChooseApplication={id => void runQuery({...turn.request, selectedApplicationId: id}, turn.id)}
           onFeature={text => {if (turn.resolution?.application_id) void runQuery({kind: 'text', text,
             applicationId: turn.resolution.application_id, selectedApplicationId: turn.resolution.application_id});}}
+          onConstruction={admin ? subject => {setConstructionSubject(subject); setRequirementsOpen(true);} : undefined}
           onNavigate={() => {if (turn.resolution) openManagement(turn.resolution);}} />)}<div ref={bottom} /></div>}
+        {workOpen && <MyWork token={session.token} onResume={target => void resumeWork(target)} onClose={() => setWorkOpen(false)} onExpired={() => onLogout('登录已过期，请重新登录。')} />}
+        {activeApplication && activeType === 'platform.form' && <FormRuntime key={`${activeApplication}:${workTarget?.applicationId === activeApplication ? workTarget.draftId ?? '' : ''}`} token={session.token} applicationId={activeApplication}
+          scope={`${session.identity.tenant_id}:${session.identity.subject}`} mode={runtimeMode} draftId={workTarget?.applicationId === activeApplication ? workTarget.draftId : undefined} onPauseReady={registerPause} onDirtyChange={setRuntimeDirty} onExpired={() => onLogout('登录已过期，请重新登录。')} />}
+        {activeApplication && activeType === 'platform.leave-approval' && <ApprovalRuntime key={`${activeApplication}:${workTarget?.applicationId === activeApplication ? workTarget.draftId ?? '' : ''}`} token={session.token} applicationId={activeApplication}
+          scope={`${session.identity.tenant_id}:${session.identity.subject}`} admin={admin} mode={runtimeMode} draftId={workTarget?.applicationId === activeApplication ? workTarget.draftId : undefined} onPauseReady={registerPause} onDirtyChange={setRuntimeDirty} onExpired={() => onLogout('登录已过期，请重新登录。')} />}
+        {admin && <RequirementPanel token={session.token} scope={`${session.identity.tenant_id}:${session.identity.subject}`} open={requirementsOpen} subject={constructionSubject}
+          onDirtyChange={setRequirementDirty} onUse={useApplication} onConfigure={(id, taskId) => {
+            if (!navigate('admin')) return; setConstructionSubject(null); setManagementLocation({applicationId: id, tab: 'basic', taskId});
+            window.history.replaceState(null, '', window.location.pathname + window.location.search + '#workbench?' + new URLSearchParams({application: id, task: taskId}));
+          }}
+          onClose={() => setRequirementsOpen(false)} onExpired={() => onLogout('登录已过期，请重新登录。')} />}
 
-        <div className="composer-area"><form className="composer" onSubmit={event => void query(event)}><label className="sr-only" htmlFor="question">向校园助手提问</label><textarea id="question" placeholder={activeApplication ? '描述要使用的功能，也可以说“打开其他应用”…' : '例如：有哪些应用、打开课程查询、配置某个应用…'} maxLength={200} value={text} disabled={busy || loggingOut} onChange={event => setText(event.target.value)} onKeyDown={event => {if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {event.preventDefault(); event.currentTarget.form?.requestSubmit();}}} /><div className="composer-toolbar"><div><span className="composer-agent">▦ {activeName ?? '自动匹配应用'}</span><button type="button" className="date-toggle" disabled={!activeApplication || busy} title={!activeApplication ? '请先选择应用' : undefined} aria-expanded={dates} onClick={() => setDates(!dates)}>▤ 日期查询</button></div><button className="send-button" aria-label="发送查询" disabled={busy || loggingOut || !text.trim()}>{busy ? '…' : '↑'}</button></div></form>
+        <div className="composer-area"><form className="composer" onSubmit={event => void query(event)}><label className="sr-only" htmlFor="question">向校园助手提问</label><textarea id="question" placeholder={activeApplication ? '描述要使用的功能，也可以说“打开其他应用”…' : '例如：有哪些应用、打开课程查询、配置某个应用…'} maxLength={200} value={text} disabled={busy || loggingOut} onChange={event => setText(event.target.value)} onKeyDown={event => {if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {event.preventDefault(); event.currentTarget.form?.requestSubmit();}}} /><div className="composer-toolbar"><div><span className="composer-agent">▦ {activeName ?? '自动匹配应用'}</span><button type="button" className="date-toggle" disabled={!activeApplication || busy || ['platform.form', 'platform.leave-approval'].includes(activeType ?? '')} title={!activeApplication ? '请先选择应用' : undefined} aria-expanded={dates} onClick={() => setDates(!dates)}>▤ 日期查询</button></div><button className="send-button" aria-label="发送查询" disabled={busy || loggingOut || !text.trim()}>{busy ? '…' : '↑'}</button></div></form>
           {dates && <form className="date-picker" onSubmit={event => void query(event, true)}><label>开始日期<input type="date" required value={start} onChange={event => setStart(event.target.value)} /></label><label>结束日期<input type="date" required min={start} value={end} onChange={event => setEnd(event.target.value)} /></label><button disabled={busy || loggingOut}>查询</button><small>最多 31 天 · 上海时区</small></form>}
-          {!turns.length && <div className="starter-prompts"><span>从这里开始</span>{(activeApplication ? ['今天有什么课', '明天课表', '这个应用有哪些功能'] : ['有哪些应用', '今天有什么课', ...(admin ? ['打开应用工作台'] : ['选择一个应用'])]).map((item, i) => <button key={item} disabled={busy} onClick={() => setText(item)}><span>{['◷', '▦', '▤'][i]}</span>{item}<span>↗</span></button>)}</div>}<p className="composer-note">先匹配应用与功能 · 规则优先 · 必要时 AI 辅助查询 · {session.identity.mode === 'demo' ? '演示数据仅供体验' : '按校园身份授权查询'} · 点击 ↑ 发送</p>
+          {!turns.length && <div className="starter-prompts"><span>从这里开始</span>{starterPrompts.map((item, i) => <button key={item} disabled={busy} onClick={() => setText(item)}><span>{['◷', '▦', '▤'][i]}</span>{item}<span>↗</span></button>)}</div>}<p className="composer-note">先匹配应用与功能 · 规则优先 · 必要时 AI 辅助查询 · {session.identity.mode === 'demo' ? '演示数据仅供体验' : '按校园身份授权查询'} · 点击 ↑ 发送</p>
         </div>
       </div>}
     </main></div>;

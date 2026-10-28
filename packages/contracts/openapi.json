@@ -122,6 +122,17 @@
             "title": "Candidates",
             "type": "array"
           },
+          "construction_subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Construction Subject"
+          },
           "feature_actions": {
             "default": [],
             "items": {
@@ -152,6 +163,21 @@
               }
             ],
             "title": "Query Text"
+          },
+          "runtime_action": {
+            "anyOf": [
+              {
+                "enum": [
+                  "fill",
+                  "records"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtime Action"
           },
           "status": {
             "enum": [
@@ -187,6 +213,17 @@
               }
             ],
             "title": "Target"
+          },
+          "type_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type Id"
           }
         },
         "required": [
@@ -194,6 +231,106 @@
           "message"
         ],
         "title": "ApplicationResolution",
+        "type": "object"
+      },
+      "ApprovalForm": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "model_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Model Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/Section"
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Sections",
+            "type": "array"
+          },
+          "submit_action_id": {
+            "const": "approval.apply",
+            "title": "Submit Action Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "model_id",
+          "sections",
+          "submit_action_id"
+        ],
+        "title": "ApprovalForm",
+        "type": "object"
+      },
+      "ApprovalNode": {
+        "additionalProperties": false,
+        "properties": {
+          "actor": {
+            "$ref": "#/components/schemas/PublisherActor"
+          },
+          "allow_self_approval": {
+            "const": false,
+            "title": "Allow Self Approval",
+            "type": "boolean"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "on_approve": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "On Approve",
+            "type": "string"
+          },
+          "on_missing_actor": {
+            "const": "block",
+            "title": "On Missing Actor",
+            "type": "string"
+          },
+          "on_reject": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "On Reject",
+            "type": "string"
+          },
+          "type": {
+            "const": "approval",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "name",
+          "actor",
+          "allow_self_approval",
+          "on_missing_actor",
+          "on_approve",
+          "on_reject"
+        ],
+        "title": "ApprovalNode",
         "type": "object"
       },
       "Bindings": {
@@ -209,6 +346,21 @@
           "schedule_reader"
         ],
         "title": "Bindings",
+        "type": "object"
+      },
+      "CancelRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "title": "CancelRequirement",
         "type": "object"
       },
       "Candidate": {
@@ -237,6 +389,45 @@
           "name"
         ],
         "title": "Candidate",
+        "type": "object"
+      },
+      "ChangeLifecycle": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "active",
+              "disabled",
+              "archived"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "expected_revision",
+          "reason",
+          "idempotency_key"
+        ],
+        "title": "ChangeLifecycle",
         "type": "object"
       },
       "Column": {
@@ -314,6 +505,100 @@
           "username"
         ],
         "title": "Connection",
+        "type": "object"
+      },
+      "Constraints": {
+        "additionalProperties": false,
+        "properties": {
+          "max_length": {
+            "maximum": 10000.0,
+            "minimum": 1.0,
+            "title": "Max Length",
+            "type": "integer"
+          },
+          "maximum": {
+            "maximum": 9007199254740991.0,
+            "minimum": -9007199254740991.0,
+            "title": "Maximum",
+            "type": "number"
+          },
+          "minimum": {
+            "maximum": 9007199254740991.0,
+            "minimum": -9007199254740991.0,
+            "title": "Minimum",
+            "type": "number"
+          },
+          "precision": {
+            "maximum": 6.0,
+            "minimum": 0.0,
+            "title": "Precision",
+            "type": "integer"
+          }
+        },
+        "title": "Constraints",
+        "type": "object"
+      },
+      "Control": {
+        "additionalProperties": false,
+        "properties": {
+          "component": {
+            "enum": [
+              "text",
+              "textarea",
+              "number",
+              "checkbox",
+              "select",
+              "multiselect",
+              "date"
+            ],
+            "title": "Component",
+            "type": "string"
+          },
+          "field_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Field Id",
+            "type": "string"
+          },
+          "help": {
+            "maxLength": 300,
+            "title": "Help",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/Layout"
+          },
+          "readonly": {
+            "const": false,
+            "default": false,
+            "title": "Readonly",
+            "type": "boolean"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "field_id",
+          "component",
+          "label",
+          "help",
+          "required",
+          "layout"
+        ],
+        "title": "Control",
         "type": "object"
       },
       "Course": {
@@ -607,18 +892,27 @@
             "default": "course-standard",
             "enum": [
               "course-standard",
-              "course-compact"
+              "course-compact",
+              "form-registration",
+              "leave-basic"
             ],
             "title": "Template Id",
             "type": "string"
           },
           "type_id": {
-            "const": "campus.course-query",
+            "enum": [
+              "campus.course-query",
+              "platform.form",
+              "platform.leave-approval"
+            ],
             "title": "Type Id",
             "type": "string"
           },
           "type_version": {
-            "const": "1.0.0",
+            "enum": [
+              "1.0.0",
+              "1.1.0"
+            ],
             "title": "Type Version",
             "type": "string"
           }
@@ -630,6 +924,104 @@
           "idempotency_key"
         ],
         "title": "CreateApplication",
+        "type": "object"
+      },
+      "DataField": {
+        "additionalProperties": false,
+        "properties": {
+          "constraints": {
+            "$ref": "#/components/schemas/Constraints"
+          },
+          "data_type": {
+            "enum": [
+              "string",
+              "integer",
+              "decimal",
+              "boolean",
+              "date",
+              "enum",
+              "enum_list"
+            ],
+            "title": "Data Type",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "pattern": "^[a-z][a-z0-9_]{0,63}$",
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "nullable": {
+            "title": "Nullable",
+            "type": "boolean"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/Option"
+            },
+            "maxItems": 20,
+            "title": "Options",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "label",
+          "data_type",
+          "nullable",
+          "constraints",
+          "options"
+        ],
+        "title": "DataField",
+        "type": "object"
+      },
+      "DataModel": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter_id": {
+            "const": "form.records",
+            "title": "Adapter Id",
+            "type": "string"
+          },
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/DataField"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Fields",
+            "type": "array"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "adapter_id",
+          "fields"
+        ],
+        "title": "DataModel",
         "type": "object"
       },
       "DisplayConfig": {
@@ -702,6 +1094,87 @@
         "title": "EditQuestion",
         "type": "object"
       },
+      "EditRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "business_kind": {
+            "default": "unknown",
+            "enum": [
+              "unknown",
+              "course_query",
+              "registration",
+              "leave",
+              "purchase",
+              "venue",
+              "visit",
+              "event"
+            ],
+            "title": "Business Kind",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "idempotency_key",
+          "expected_revision"
+        ],
+        "title": "EditRequirement",
+        "type": "object"
+      },
+      "End": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "outcome": {
+            "enum": [
+              "approved",
+              "rejected"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "type": {
+            "const": "end",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "outcome"
+        ],
+        "title": "End",
+        "type": "object"
+      },
       "ErrorDetail": {
         "properties": {
           "code": {
@@ -741,6 +1214,130 @@
           "text"
         ],
         "title": "FeatureAction",
+        "type": "object"
+      },
+      "Form": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "model_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Model Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/Section"
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Sections",
+            "type": "array"
+          },
+          "submit_action_id": {
+            "const": "form.records.submit",
+            "title": "Submit Action Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "model_id",
+          "sections",
+          "submit_action_id"
+        ],
+        "title": "Form",
+        "type": "object"
+      },
+      "FormConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "application": {
+            "$ref": "#/components/schemas/ApplicationInfo"
+          },
+          "form": {
+            "$ref": "#/components/schemas/Form"
+          },
+          "model": {
+            "$ref": "#/components/schemas/DataModel"
+          },
+          "schema_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "application",
+          "model",
+          "form"
+        ],
+        "title": "FormConfig",
+        "type": "object"
+      },
+      "GenerateConstruction": {
+        "additionalProperties": false,
+        "properties": {
+          "document_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Name"
+          },
+          "document_text": {
+            "anyOf": [
+              {
+                "maxLength": 65536,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Text"
+          },
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "text",
+          "idempotency_key"
+        ],
+        "title": "GenerateConstruction",
         "type": "object"
       },
       "GenerateDesign": {
@@ -858,6 +1455,67 @@
         "title": "IntentRule",
         "type": "object"
       },
+      "Layout": {
+        "additionalProperties": false,
+        "properties": {
+          "desktop": {
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Desktop",
+            "type": "integer"
+          },
+          "mobile": {
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Mobile",
+            "type": "integer"
+          },
+          "tablet": {
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "Tablet",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "mobile",
+          "tablet",
+          "desktop"
+        ],
+        "title": "Layout",
+        "type": "object"
+      },
+      "LeaveConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "application": {
+            "$ref": "#/components/schemas/ApplicationInfo"
+          },
+          "form": {
+            "$ref": "#/components/schemas/ApprovalForm"
+          },
+          "model": {
+            "$ref": "#/components/schemas/DataModel"
+          },
+          "schema_version": {
+            "const": "1.0.0",
+            "default": "1.0.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "workflow": {
+            "$ref": "#/components/schemas/Workflow"
+          }
+        },
+        "required": [
+          "application",
+          "model",
+          "form",
+          "workflow"
+        ],
+        "title": "LeaveConfig",
+        "type": "object"
+      },
       "Login": {
         "additionalProperties": false,
         "properties": {
@@ -905,6 +1563,29 @@
           "category"
         ],
         "title": "Metadata",
+        "type": "object"
+      },
+      "Option": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "label"
+        ],
+        "title": "Option",
         "type": "object"
       },
       "PlanRequest": {
@@ -971,6 +1652,72 @@
         "title": "PlanRequest",
         "type": "object"
       },
+      "PrepareCreation": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "generation_key": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "minLength": 16,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Generation Key"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 30,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "source_application_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "minLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Application Id"
+          },
+          "template_id": {
+            "enum": [
+              "course-standard",
+              "course-compact",
+              "form-registration",
+              "leave-basic"
+            ],
+            "title": "Template Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "name",
+          "template_id",
+          "idempotency_key"
+        ],
+        "title": "PrepareCreation",
+        "type": "object"
+      },
       "PreviewRequest": {
         "additionalProperties": false,
         "properties": {
@@ -989,6 +1736,40 @@
           "content"
         ],
         "title": "PreviewRequest",
+        "type": "object"
+      },
+      "PreviewTypedForm": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormConfig"
+              },
+              {
+                "$ref": "#/components/schemas/LeaveConfig"
+              }
+            ],
+            "title": "Content"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "values": {
+            "additionalProperties": true,
+            "maxProperties": 30,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "content",
+          "values"
+        ],
+        "title": "PreviewTypedForm",
         "type": "object"
       },
       "PublishDraft": {
@@ -1023,6 +1804,33 @@
           "idempotency_key"
         ],
         "title": "PublishDraft",
+        "type": "object"
+      },
+      "PublisherActor": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "relation",
+            "title": "Kind",
+            "type": "string"
+          },
+          "resolver_id": {
+            "const": "identity.application-publisher",
+            "title": "Resolver Id",
+            "type": "string"
+          },
+          "selection": {
+            "const": "exactly_one",
+            "title": "Selection",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "resolver_id",
+          "selection"
+        ],
+        "title": "PublisherActor",
         "type": "object"
       },
       "QueryRequest": {
@@ -1168,6 +1976,18 @@
       "ResolveApplication": {
         "additionalProperties": false,
         "properties": {
+          "construction_subject": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Construction Subject"
+          },
           "current_application_id": {
             "anyOf": [
               {
@@ -1368,6 +2188,47 @@
         "title": "SaveApplication",
         "type": "object"
       },
+      "SaveBusinessDraft": {
+        "additionalProperties": false,
+        "properties": {
+          "cancel": {
+            "default": false,
+            "title": "Cancel",
+            "type": "boolean"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "release_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": true,
+            "maxProperties": 30,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "release_id",
+          "expected_revision",
+          "values",
+          "idempotency_key"
+        ],
+        "title": "SaveBusinessDraft",
+        "type": "object"
+      },
       "SaveDraft": {
         "additionalProperties": false,
         "properties": {
@@ -1463,6 +2324,85 @@
           "expected_revision"
         ],
         "title": "SaveModel",
+        "type": "object"
+      },
+      "SaveRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "business_kind": {
+            "default": "unknown",
+            "enum": [
+              "unknown",
+              "course_query",
+              "registration",
+              "leave",
+              "purchase",
+              "venue",
+              "visit",
+              "event"
+            ],
+            "title": "Business Kind",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "idempotency_key"
+        ],
+        "title": "SaveRequirement",
+        "type": "object"
+      },
+      "SaveTypedForm": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormConfig"
+              },
+              {
+                "$ref": "#/components/schemas/LeaveConfig"
+              }
+            ],
+            "title": "Content"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "content",
+          "idempotency_key"
+        ],
+        "title": "SaveTypedForm",
         "type": "object"
       },
       "ScheduleData": {
@@ -1564,6 +2504,38 @@
         "title": "ScheduleResponse",
         "type": "object"
       },
+      "Section": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/Control"
+            },
+            "maxItems": 30,
+            "minItems": 1,
+            "title": "Fields",
+            "type": "array"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "fields"
+        ],
+        "title": "Section",
+        "type": "object"
+      },
       "SetColumn": {
         "additionalProperties": false,
         "properties": {
@@ -1602,6 +2574,127 @@
         "title": "SetMetadata",
         "type": "object"
       },
+      "Start": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "next": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Next",
+            "type": "string"
+          },
+          "type": {
+            "const": "start",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "next"
+        ],
+        "title": "Start",
+        "type": "object"
+      },
+      "SubmitForm": {
+        "additionalProperties": false,
+        "properties": {
+          "draft_id": {
+            "anyOf": [
+              {
+                "maxLength": 36,
+                "minLength": 36,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Id"
+          },
+          "draft_revision": {
+            "anyOf": [
+              {
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Draft Revision"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "release_id": {
+            "maxLength": 36,
+            "minLength": 36,
+            "title": "Release Id",
+            "type": "string"
+          },
+          "values": {
+            "additionalProperties": true,
+            "maxProperties": 30,
+            "title": "Values",
+            "type": "object"
+          }
+        },
+        "required": [
+          "release_id",
+          "values",
+          "idempotency_key"
+        ],
+        "title": "SubmitForm",
+        "type": "object"
+      },
+      "Transition": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "approved",
+              "rejected",
+              "withdrawn",
+              "reassign_to_me"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "idempotency_key": {
+            "maxLength": 80,
+            "minLength": 16,
+            "title": "Idempotency Key",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action",
+          "expected_revision",
+          "idempotency_key"
+        ],
+        "title": "Transition",
+        "type": "object"
+      },
       "UIHint": {
         "properties": {
           "columns": {
@@ -1635,6 +2728,33 @@
           }
         },
         "title": "UIHint",
+        "type": "object"
+      },
+      "ValidateDesign": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FormConfig"
+              },
+              {
+                "$ref": "#/components/schemas/LeaveConfig"
+              }
+            ],
+            "title": "Content"
+          },
+          "expected_revision": {
+            "minimum": 0.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "expected_revision",
+          "content"
+        ],
+        "title": "ValidateDesign",
         "type": "object"
       },
       "ValidationError": {
@@ -1675,6 +2795,102 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "Withdrawal": {
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {
+            "const": "approval.withdraw",
+            "title": "Action Id",
+            "type": "string"
+          },
+          "allowed_at_node_ids": {
+            "items": {
+              "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+              "type": "string"
+            },
+            "maxItems": 1,
+            "minItems": 1,
+            "title": "Allowed At Node Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "allowed_at_node_ids",
+          "action_id"
+        ],
+        "title": "Withdrawal",
+        "type": "object"
+      },
+      "Workflow": {
+        "additionalProperties": false,
+        "properties": {
+          "entry_node_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Entry Node Id",
+            "type": "string"
+          },
+          "executor_id": {
+            "const": "approval.single",
+            "title": "Executor Id",
+            "type": "string"
+          },
+          "form_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Form Id",
+            "type": "string"
+          },
+          "id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Id",
+            "type": "string"
+          },
+          "model_id": {
+            "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+            "title": "Model Id",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "nodes": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Start"
+                },
+                {
+                  "$ref": "#/components/schemas/ApprovalNode"
+                },
+                {
+                  "$ref": "#/components/schemas/End"
+                }
+              ]
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Nodes",
+            "type": "array"
+          },
+          "withdrawal": {
+            "$ref": "#/components/schemas/Withdrawal"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "model_id",
+          "form_id",
+          "executor_id",
+          "entry_node_id",
+          "nodes",
+          "withdrawal"
+        ],
+        "title": "Workflow",
         "type": "object"
       }
     }
@@ -2413,6 +3629,589 @@
         "summary": "Save",
         "tags": [
           "多应用管理"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form": {
+      "get": {
+        "operationId": "draft_api_v1_admin_applications__application_id__form_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/audit": {
+      "get": {
+        "operationId": "audit_history_api_v1_admin_applications__application_id__form_audit_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Audit History",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/draft": {
+      "put": {
+        "operationId": "save_api_v1_admin_applications__application_id__form_draft_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTypedForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/preview": {
+      "post": {
+        "operationId": "preview_api_v1_admin_applications__application_id__form_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PreviewTypedForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/publish": {
+      "post": {
+        "operationId": "publish_api_v1_admin_applications__application_id__form_publish_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Publish",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/records": {
+      "get": {
+        "operationId": "admin_records_api_v1_admin_applications__application_id__form_records_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Records",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/records/{record_id}": {
+      "get": {
+        "operationId": "admin_detail_api_v1_admin_applications__application_id__form_records__record_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Admin Detail",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/releases": {
+      "get": {
+        "operationId": "history_api_v1_admin_applications__application_id__form_releases_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/releases/{release_id}": {
+      "get": {
+        "operationId": "release_detail_api_v1_admin_applications__application_id__form_releases__release_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "release_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Release Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Release Detail",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/rollback": {
+      "post": {
+        "operationId": "rollback_api_v1_admin_applications__application_id__form_rollback_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rollback"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rollback",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/form/validate": {
+      "post": {
+        "operationId": "validate_design_api_v1_admin_applications__application_id__form_validate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateDesign"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate Design",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/admin/applications/{application_id}/lifecycle": {
+      "post": {
+        "operationId": "transition_api_v1_admin_applications__application_id__lifecycle_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangeLifecycle"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transition",
+        "tags": [
+          "应用生命周期"
         ]
       }
     },
@@ -3415,6 +5214,353 @@
         ]
       }
     },
+    "/api/v1/applications/{application_id}/approvals": {
+      "get": {
+        "operationId": "approvals_api_v1_applications__application_id__approvals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "mine",
+              "enum": [
+                "mine",
+                "assigned",
+                "all"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "pending",
+                "approved",
+                "rejected",
+                "withdrawn"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approvals",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/approvals/{record_id}": {
+      "get": {
+        "operationId": "approval_detail_api_v1_applications__application_id__approvals__record_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approval Detail",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/approvals/{record_id}/transition": {
+      "post": {
+        "operationId": "transition_api_v1_applications__application_id__approvals__record_id__transition_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Transition"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transition",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/business-drafts/{draft_id}": {
+      "get": {
+        "operationId": "business_draft_api_v1_applications__application_id__business_drafts__draft_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "draft_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Draft Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Business Draft",
+        "tags": [
+          "简单登记表单"
+        ]
+      },
+      "put": {
+        "operationId": "save_business_draft_api_v1_applications__application_id__business_drafts__draft_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "draft_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Draft Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveBusinessDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Business Draft",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/form": {
+      "get": {
+        "operationId": "definition_api_v1_applications__application_id__form_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Definition",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
     "/api/v1/applications/{application_id}/query": {
       "post": {
         "operationId": "application_query_api_v1_applications__application_id__query_post",
@@ -3463,6 +5609,208 @@
           }
         },
         "summary": "Application Query"
+      }
+    },
+    "/api/v1/applications/{application_id}/records": {
+      "get": {
+        "operationId": "listing_api_v1_applications__application_id__records_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listing",
+        "tags": [
+          "简单登记表单"
+        ]
+      },
+      "post": {
+        "operationId": "submit_api_v1_applications__application_id__records_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitForm"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/records/by-command/{command_key}": {
+      "get": {
+        "operationId": "by_command_api_v1_applications__application_id__records_by_command__command_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "command_key",
+            "required": true,
+            "schema": {
+              "title": "Command Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "By Command",
+        "tags": [
+          "简单登记表单"
+        ]
+      }
+    },
+    "/api/v1/applications/{application_id}/records/{record_id}": {
+      "get": {
+        "operationId": "detail_api_v1_applications__application_id__records__record_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "record_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Record Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detail",
+        "tags": [
+          "简单登记表单"
+        ]
       }
     },
     "/api/v1/applications/{application_id}/schedule": {
@@ -3523,6 +5871,450 @@
           }
         },
         "summary": "Application Schedule"
+      }
+    },
+    "/api/v1/assistant/requirements": {
+      "get": {
+        "operationId": "listing_api_v1_assistant_requirements_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "pending_capability",
+                "converted",
+                "cancelled"
+              ],
+              "title": "Status",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listing",
+        "tags": [
+          "应用建设需求"
+        ]
+      },
+      "post": {
+        "operationId": "save_api_v1_assistant_requirements_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveRequirement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save",
+        "tags": [
+          "应用建设需求"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/command-history": {
+      "get": {
+        "operationId": "command_history_api_v1_assistant_requirements_command_history_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Command History",
+        "tags": [
+          "应用建设需求"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/commands/{command_key}": {
+      "get": {
+        "operationId": "command_result_api_v1_assistant_requirements_commands__command_key__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_key",
+            "required": true,
+            "schema": {
+              "title": "Command Key",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Command Result",
+        "tags": [
+          "应用建设需求"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/confirmations/{command_id}/execute": {
+      "post": {
+        "operationId": "confirm_api_v1_assistant_requirements_confirmations__command_id__execute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "command_id",
+            "required": true,
+            "schema": {
+              "title": "Command Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm",
+        "tags": [
+          "应用建设需求"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/{task_id}": {
+      "get": {
+        "operationId": "detail_api_v1_assistant_requirements__task_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Detail",
+        "tags": [
+          "应用建设需求"
+        ]
+      },
+      "put": {
+        "operationId": "edit_api_v1_assistant_requirements__task_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditRequirement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit",
+        "tags": [
+          "应用建设需求"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/{task_id}/cancel": {
+      "post": {
+        "operationId": "cancel_api_v1_assistant_requirements__task_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelRequirement"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel",
+        "tags": [
+          "应用建设需求"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/{task_id}/generate": {
+      "post": {
+        "operationId": "generate_api_v1_assistant_requirements__task_id__generate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateConstruction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate",
+        "tags": [
+          "AI 应用创建"
+        ]
+      }
+    },
+    "/api/v1/assistant/requirements/{task_id}/prepare": {
+      "post": {
+        "operationId": "prepare_api_v1_assistant_requirements__task_id__prepare_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "task_id",
+            "required": true,
+            "schema": {
+              "title": "Task Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareCreation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Prepare",
+        "tags": [
+          "应用建设需求"
+        ]
       }
     },
     "/api/v1/assistant/resolve": {
@@ -3764,6 +6556,47 @@
           }
         },
         "summary": "Me"
+      }
+    },
+    "/api/v1/my-work": {
+      "get": {
+        "operationId": "my_work_api_v1_my_work_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "My Work",
+        "tags": [
+          "简单登记表单"
+        ]
       }
     }
   }

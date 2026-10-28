@@ -6,11 +6,12 @@ import type {ManagementLocation} from './assistant';
 
 type Inspection = {status: string; fingerprint: string; authenticated: boolean; checks: {name: string; ok: boolean}[]; plan: string[]};
 type DeploymentPlan = {digest: string; operation: 'install' | 'update'; target: {host: string; port: number; username: string; fingerprint: string}; release_directory: string; artifact_sha256: string; artifact: {file_count: number; archive_bytes: number; web_build: string}; preflight: {facts: {free_bytes: number} | null; required_free_bytes: number | null; blockers: {code: string; message: string}[]; warnings: string[]}; steps: {id: string; description: string; requires_sudo: boolean}[]; limitations: string[]};
-export function ApplicationManagement({initialToken, onSessionExpired, onDirtyChange, deployment = false, aiModel = false, onUse, location}: {
+export function ApplicationManagement({initialToken, onSessionExpired, onDirtyChange, deployment = false, aiModel = false, onUse, location, onOpenRequirements}: {
   initialToken: string; onSessionExpired: () => void; onDirtyChange: (dirty: boolean) => void; deployment?: boolean; aiModel?: boolean; onUse?: (id: string) => void; location?: ManagementLocation;
+  onOpenRequirements?: () => void;
 }) {
   if (aiModel) return <AIModelSettings token={initialToken} onSessionExpired={onSessionExpired} onDirtyChange={onDirtyChange} />;
-  return deployment ? <DeploymentPanel token={initialToken} onSessionExpired={onSessionExpired} /> : <ApplicationWorkbench token={initialToken} onSessionExpired={onSessionExpired} onDirtyChange={onDirtyChange} onUse={onUse} location={location} />;
+  return deployment ? <DeploymentPanel token={initialToken} onSessionExpired={onSessionExpired} /> : <ApplicationWorkbench token={initialToken} onSessionExpired={onSessionExpired} onDirtyChange={onDirtyChange} onUse={onUse} location={location} onOpenRequirements={onOpenRequirements} />;
 }
 export function DeploymentPanel({token, onSessionExpired}: {token: string; onSessionExpired: () => void}) {
   const [host, setHost] = useState(''); const [port, setPort] = useState(22);

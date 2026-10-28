@@ -89,9 +89,21 @@ class DatabaseRecoveryTests(unittest.TestCase):
                 start_time=time(9), end_time=time(10), location='test', teacher='test', is_mock=True,
                 source_tag='recovery-test', created_at=datetime.now(timezone.utc)))
         value = database.snapshot(fixture.engine)
+        from app.modules.intent.requirements import RequirementStore, SaveRequirement
+        RequirementStore(fixture.store).save(SaveRequirement(title='Recovery request', description='Synthetic only', idempotency_key='recovery-request-key'), 'trace')
+        value = database.snapshot(fixture.engine)
         result = database.restore_drill(value, fixture.base_engine)
         self.assertEqual(result['status'], 'passed')
         self.assertEqual(database.snapshot(fixture.engine)['tables'], value['tables'])
+        old = dict(value, revision='0006_application_runtime', migrations=database.migrations('0006_application_runtime'))
+        old['tables'] = {name: rows for name, rows in value['tables'].items() if name in {t.name for t in database.tables_for('0006_application_runtime')}}
+        old['tables_digest'] = baseline.digest(baseline.canonical(old['tables']))
+        self.assertEqual(database.restore_drill(old, fixture.base_engine)['status'], 'passed')
+        older = dict(value, revision='0007_assistant_requirement', migrations=database.migrations('0007_assistant_requirement'))
+        older['tables'] = {table.name: [{key: row[key] for key in table.c.keys()} for row in value['tables'][table.name]]
+            for table in database.tables_for('0007_assistant_requirement')}
+        older['tables_digest'] = baseline.digest(baseline.canonical(older['tables']))
+        self.assertEqual(database.restore_drill(older, fixture.base_engine)['status'], 'passed')
         broken = dict(value, migrations={})
         with patch.object(fixture.base_engine, 'connect', side_effect=AssertionError('must validate first')):
             with self.assertRaises(baseline.BaselineError):

@@ -15,9 +15,23 @@ router = APIRouter(prefix='/api/v1/admin', tags=['多应用管理'], dependencie
 
 @router.get('/application-types')
 def types():
-    return {'items': [course_type()], 'templates': [
+    from app.modules.forms.adapter import enabled, form_type
+    items = [course_type()]
+    templates = [
         {'id': 'course-standard', 'type_id': 'campus.course-query', 'name': '标准课程查询', 'description': '展示课程、日期、时间、地点和教师。'},
-        {'id': 'course-compact', 'type_id': 'campus.course-query', 'name': '简洁课程查询', 'description': '保留日常查询字段，默认隐藏教师。'}]}
+        {'id': 'course-compact', 'type_id': 'campus.course-query', 'name': '简洁课程查询', 'description': '保留日常查询字段，默认隐藏教师。'}]
+    if enabled():
+        from app.modules.unified_editor.runtime import unified_type
+        items.append(unified_type('platform.form'))
+        items.append(form_type())
+        templates.append({'id': 'form-registration', 'type_id': 'platform.form', 'name': '简单登记表', 'description': '配置表单、发布填写，查看本人或获授权记录。'})
+    from app.modules.approvals.adapter import enabled as approvals_enabled, approval_type
+    if approvals_enabled():
+        from app.modules.unified_editor.runtime import unified_type
+        items.append(unified_type('platform.leave-approval'))
+        items.append(approval_type())
+        templates.append({'id': 'leave-basic', 'type_id': 'platform.leave-approval', 'name': '单级请假申请', 'description': '起止日期、原因，由已认证发布管理员审批；禁止自审，待审可撤回。'})
+    return {'items': items, 'templates': templates}
 
 
 @router.get('/applications')

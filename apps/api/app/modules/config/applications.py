@@ -23,7 +23,17 @@ def catalog(request: Request):
     published = published_config(principal)
     application = DisplayConfig.model_validate(published['content']).application
     apps = []
-    if set(application.visible_roles).intersection(principal.roles):
+    from app.settings import database_is_configured
+    active = True
+    if database_is_configured():
+        from app.modules.config.routes import execute
+        from app.modules.config.lifecycle import status
+        from app.modules.config.store import LEGACY_APPLICATION_ID
+        def original_active(store):
+            with store.engine.connect() as connection:
+                return status(connection, store.tenant_id, LEGACY_APPLICATION_ID)['status'] == 'active'
+        active = execute(original_active, principal)
+    if active and set(application.visible_roles).intersection(principal.roles):
         apps.append({'id': 'schedule', 'icon': '▦', 'name': application.name,
                      'category': application.category, 'desc': application.description, 'ready': True})
     from app.settings import database_is_configured

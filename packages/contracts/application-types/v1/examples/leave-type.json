@@ -1,0 +1,17 @@
+{
+  "protocol_version": "1.0.0",
+  "type_id": "platform.leave-approval",
+  "type_version": "1.0.0",
+  "family": "approval",
+  "title": "单级请假审批",
+  "config_schema_id": "urn:campus:application-types:v1:leave-config",
+  "config_schema_version": "1.0.0",
+  "runtime_adapter_id": "leave-approval-v1",
+  "editor_sections": [
+    {"id": "form", "title": "申请表单", "editor_id": "leave-form-v1"},
+    {"id": "workflow", "title": "单级流程", "editor_id": "leave-flow-v1"},
+    {"id": "records", "title": "审批记录", "editor_id": "leave-records-v1"}
+  ],
+  "features": {"ai_design": false, "question_library": false},
+  "required_capability_ids": ["approval.apply", "approval.single", "approval.withdraw", "identity.application-publisher"]
+}

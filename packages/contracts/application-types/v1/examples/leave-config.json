@@ -1,0 +1,150 @@
+{
+  "application": {
+    "category": "校园事务",
+    "description": "按自然日提交请假，由发布管理员审批，可查询进度或在待审时撤回。",
+    "name": "请假申请",
+    "visible_roles": [
+      "student",
+      "teacher",
+      "config_admin"
+    ]
+  },
+  "form": {
+    "id": "leave_form",
+    "model_id": "leave_application",
+    "name": "请假申请表",
+    "sections": [
+      {
+        "fields": [
+          {
+            "component": "date",
+            "field_id": "start_date",
+            "help": "",
+            "id": "start_date_control",
+            "label": "开始日期",
+            "layout": {
+              "desktop": 6,
+              "mobile": 12,
+              "tablet": 6
+            },
+            "readonly": false,
+            "required": true
+          },
+          {
+            "component": "date",
+            "field_id": "end_date",
+            "help": "",
+            "id": "end_date_control",
+            "label": "结束日期",
+            "layout": {
+              "desktop": 6,
+              "mobile": 12,
+              "tablet": 6
+            },
+            "readonly": false,
+            "required": true
+          },
+          {
+            "component": "textarea",
+            "field_id": "reason",
+            "help": "",
+            "id": "reason_control",
+            "label": "请假原因",
+            "layout": {
+              "desktop": 12,
+              "mobile": 12,
+              "tablet": 12
+            },
+            "readonly": false,
+            "required": true
+          }
+        ],
+        "id": "leave_details",
+        "title": "请假信息"
+      }
+    ],
+    "submit_action_id": "approval.apply"
+  },
+  "model": {
+    "adapter_id": "form.records",
+    "fields": [
+      {
+        "constraints": {},
+        "data_type": "date",
+        "id": "start_date",
+        "key": "start_date",
+        "label": "开始日期",
+        "nullable": false,
+        "options": []
+      },
+      {
+        "constraints": {},
+        "data_type": "date",
+        "id": "end_date",
+        "key": "end_date",
+        "label": "结束日期",
+        "nullable": false,
+        "options": []
+      },
+      {
+        "constraints": {
+          "max_length": 1000
+        },
+        "data_type": "string",
+        "id": "reason",
+        "key": "reason",
+        "label": "请假原因",
+        "nullable": false,
+        "options": []
+      }
+    ],
+    "id": "leave_application",
+    "name": "请假申请"
+  },
+  "schema_version": "1.0.0",
+  "workflow": {
+    "entry_node_id": "start",
+    "executor_id": "approval.single",
+    "form_id": "leave_form",
+    "id": "leave_process",
+    "model_id": "leave_application",
+    "name": "单级请假审批",
+    "nodes": [
+      {
+        "id": "start",
+        "next": "review",
+        "type": "start"
+      },
+      {
+        "actor": {
+          "kind": "relation",
+          "resolver_id": "identity.application-publisher",
+          "selection": "exactly_one"
+        },
+        "allow_self_approval": false,
+        "id": "review",
+        "name": "管理员审批",
+        "on_approve": "approved",
+        "on_missing_actor": "block",
+        "on_reject": "rejected",
+        "type": "approval"
+      },
+      {
+        "id": "approved",
+        "outcome": "approved",
+        "type": "end"
+      },
+      {
+        "id": "rejected",
+        "outcome": "rejected",
+        "type": "end"
+      }
+    ],
+    "withdrawal": {
+      "action_id": "approval.withdraw",
+      "allowed_at_node_ids": [
+        "review"
+      ]
+    }
+  }
+}

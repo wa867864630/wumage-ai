@@ -24,6 +24,9 @@ def check_plan(profile, live=False, build=False):
     if profile == 'full':
         checks += [('backend-isolated-database', [sys.executable, 'scripts/check.py', '--database'], ROOT),
             ('web-dom-workbench', [node, 'scripts/check_workbench.mjs'], ROOT),
+            ('web-dom-forms', [node, 'scripts/check_forms.mjs'], ROOT),
+            ('web-dom-approvals', [node, 'scripts/check_approvals.mjs'], ROOT),
+            ('web-dom-work-closure', [node, 'scripts/check_work_closure.mjs'], ROOT),
             ('synthetic-intent', [sys.executable, 'scripts/evaluate.py'], ROOT)]
     if live:
         checks.append(('live-demo-smoke', [sys.executable, 'scripts/verify_mvp.py'], ROOT))

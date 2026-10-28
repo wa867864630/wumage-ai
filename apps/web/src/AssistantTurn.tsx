@@ -3,11 +3,12 @@ import type {ScheduleResponse} from './generated/contracts';
 import {ScheduleTable} from './ScheduleTable';
 
 export function AssistantTurn({id, question, applicationName, response, resolution, elapsedMs, error, busy,
-  onRetry, onChooseApplication, onNavigate, onSuggestion, onFeature}: {
+  onRetry, onChooseApplication, onNavigate, onSuggestion, onFeature, onConstruction}: {
   id: number; question: string; applicationName?: string; response?: ScheduleResponse; resolution?: ApplicationResolution;
   elapsedMs?: number; error?: string; busy: boolean; onRetry: () => void;
   onChooseApplication: (id: string) => void; onNavigate: () => void; onSuggestion: (text: string) => void;
   onFeature: (text: string) => void;
+  onConstruction?: (subject: string) => void;
 }) {
   const resolving = !response && (!resolution || resolution.status === 'query');
   return <section className="turn" id={`turn-${id}`}>
@@ -28,6 +29,7 @@ export function AssistantTurn({id, question, applicationName, response, resoluti
             <details className="request-detail"><summary>请求详情</summary><p>请求编号：{response.trace_id}</p>{response.routing?.rule_id && <p>规则：{response.routing.rule_id}</p>}</details>
           </> : resolution && <>
             <p>{resolution.message}</p>
+            {resolution.construction_subject && onConstruction && <button disabled={busy} onClick={() => onConstruction(resolution.construction_subject!)}>完善并保存建设需求</button>}
             {!!resolution.candidates.length && <div className="assistant-application-choices" aria-label="匹配的应用">{resolution.candidates.map(item =>
               <button key={item.id} data-application-id={item.id} disabled={busy} onClick={() => onChooseApplication(item.id)}>
                 <strong>{item.name}</strong><small>{item.category} · {item.id === 'schedule' ? '内置应用' : item.id.slice(0, 8)}</small>

@@ -21,7 +21,11 @@ WEB_SUFFIXES = {'.html', '.js', '.css', '.svg', '.png', '.jpg', '.jpeg', '.webp'
 TYPE_CONTRACT_FILES = {
     'packages/contracts/application-types/v1/' + name for name in (
         'type-manifest.schema.json', 'application-envelope.schema.json', 'course-config.schema.json',
-        'course-application.schema.json', 'examples/course-type.json')}
+        'course-application.schema.json', 'examples/course-type.json', 'form-config.schema.json', 'examples/form-type.json')}
+# Reviewed UI source inputs are hash evidence for the form type bundle, not dynamically loaded code.
+TYPE_CONTRACT_FILES |= {'apps/web/src/FormEditor.tsx', 'apps/web/src/FormRuntime.tsx'}
+TYPE_CONTRACT_FILES |= {'apps/web/src/ApprovalEditor.tsx', 'apps/web/src/ApprovalRuntime.tsx',
+    'packages/contracts/application-types/v1/leave-config.schema.json', 'packages/contracts/application-types/v1/examples/leave-type.json'}
 REQUIRED |= TYPE_CONTRACT_FILES
 
 

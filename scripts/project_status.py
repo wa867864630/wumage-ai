@@ -14,7 +14,15 @@ def report(database=False):
     sys.path.insert(0, str(ROOT / 'apps/api'))
     from app.db import LATEST_REVISION
     from app.modules.config.type_registry import course_type
+    from app.modules.forms.adapter import form_type, enabled as forms_enabled
+    from app.modules.approvals.adapter import approval_type, enabled as approvals_enabled
+    from app.modules.unified_editor.runtime import unified_type
     installed = course_type()
+    installed_types = [(installed, True, 'manifest/schema/manual implementation version; not implementation bytes'),
+        (form_type(), forms_enabled(), 'reviewed LF-normalized type source/schema inputs; shared platform covered by implementation_digest'),
+        (approval_type(), approvals_enabled(), 'reviewed LF-normalized approval inputs and form type dependency; shared platform covered by implementation_digest'),
+        (unified_type('platform.form'), forms_enabled(), 'immutable v1.1 adapter and legacy dependency; shared platform-editor@1 covered by implementation_digest'),
+        (unified_type('platform.leave-approval'), approvals_enabled(), 'immutable v1.1 adapter and legacy dependency; shared platform-editor@1 covered by implementation_digest')]
     implementation = {name: entry for name, entry in files.items() if name.startswith(
         ('apps/api/app/', 'apps/web/src/', 'packages/contracts/')) or name.endswith(
         ('requirements.txt', 'requirements-opengauss.txt', 'pnpm-lock.yaml'))}
@@ -25,9 +33,8 @@ def report(database=False):
         'contracts': {name: entry['sha256'] for name, entry in files.items() if name.startswith('packages/contracts/')},
         'dependencies': {name: entry['sha256'] for name, entry in files.items() if name.endswith(
             ('pnpm-lock.yaml', 'requirements.txt', 'requirements-opengauss.txt'))},
-        'types': [{'type_id': installed['type_id'], 'type_version': installed['type_version'],
-            'registered_digest': installed['type_digest'],
-            'registered_digest_scope': 'manifest/schema/manual implementation version; not implementation bytes'}],
+        'types': [{'type_id': item['type_id'], 'type_version': item['type_version'], 'creation_enabled': enabled,
+            'registered_digest': item['type_digest'], 'registered_digest_scope': scope} for item, enabled, scope in installed_types],
         'production_ready': False,
         'limitations': ['Not a production release or database backup',
             'Implementation evidence does not alter existing type digests or authorize a type upgrade',

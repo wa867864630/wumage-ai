@@ -1,4 +1,8 @@
-import {useCallback, useEffect, useRef, useState, type KeyboardEvent} from 'react';
+import {ApplicationEditorHeader, ApplicationEditorActionBar, ApplicationConfigHeading} from './ApplicationEditorChrome';
+import {useCallback, useEffect, useRef, useState} from 'react';
+import {ApplicationSettingsFields} from './ApplicationSettingsFields';
+import {ApplicationConfigTabs} from './ApplicationConfigTabs';
+import {ApplicationChangeReview} from './ApplicationChangeReview';
 import {ScheduleTable} from './ScheduleTable';
 import {api as request, SessionExpired} from './api';
 import {CourseProposalPanel} from './CourseProposalPanel';
@@ -16,7 +20,7 @@ type Preview = {routing: {status: string; message: string; start_date?: string; 
 }};
 type Audit = {id: string; actor_id: string; action: string; trace_id: string; created_at: string; before_json: unknown; after_json: unknown};
 type Monitoring = {counters: Record<string, number>; outbox: {counts: Record<string, number>; failed: {id: string; attempts: number; last_error: string}[]}};
-const tabs = [['basic', '基础信息'], ['page', '页面配置'], ['questions', '问法与规则'], ['ai', 'AI 设计'], ['history', '发布记录']] as const;
+const tabs = [['basic', '基础信息'], ['page', '页面与表单'], ['questions', '问法与规则'], ['ai', 'AI 设计'], ['history', '发布记录']] as const;
 type Tab = typeof tabs[number][0];
 const tabNames = Object.fromEntries(tabs);
 const dates = [['today', '今天'], ['tomorrow', '明天'], ['day_after', '后天'], ['this_week', '本周'], ['next_week', '下周']];
@@ -104,15 +108,6 @@ export function ConfigAdmin({initialToken = '', onSessionExpired, onDirtyChange,
     finally {setBusy(false);}
   }
   function selectTab(next: Tab) {setTab(next); setVisited(previous => new Set([...previous, next]));}
-  function tabKey(event: KeyboardEvent<HTMLButtonElement>, index: number) {
-    let next = index;
-    if (event.key === 'ArrowRight') next = (index + 1) % availableTabs.length;
-    else if (event.key === 'ArrowLeft') next = (index + availableTabs.length - 1) % availableTabs.length;
-    else if (event.key === 'Home') next = 0;
-    else if (event.key === 'End') next = availableTabs.length - 1;
-    else return;
-    event.preventDefault(); selectTab(availableTabs[next][0]); document.getElementById(`config-tab-${availableTabs[next][0]}`)?.focus();
-  }
   function change(content: Content) {if (draft) {setDraft({...draft, content}); setPreview(null);}}
   function changeRules(rules: IntentRule[]) {if (draft) change({...draft.content, rules});}
   function updateRule(index: number, patch: Partial<IntentRule>) {
@@ -142,13 +137,11 @@ export function ConfigAdmin({initialToken = '', onSessionExpired, onDirtyChange,
       <p className="application-list-note">选择应用后，在右侧管理各项配置。</p>
     </aside>}
     <div className="application-detail">
-      <header className="application-detail-heading"><div><div className="overline">APPLICATION SETTINGS</div><h2>{draft?.content.application.name || appName}</h2>
-        <div className="application-statuses"><span className="management-badge">{draft?.current_release_id ? '已发布' : scoped ? '未发布' : '使用内置配置'}</span>
-          {dirty && <span className="management-badge warning">有未保存修改</span>}{(savedUnpublished || (scoped && draft && !draft.current_release_id)) && <span className="management-badge warning">有待发布变更</span>}</div></div>
-        {onUse && draft?.current_release_id && <button className="quiet-button" disabled={busy || localWork || uncertain} onClick={() => onUse(applicationId ?? 'schedule')}>使用应用 ↗</button>}<button className="quiet-button" disabled={busy} onClick={reload}>重新加载</button></header>
-      <div className="management-tabs" role="tablist" aria-label="应用功能配置">{availableTabs.map(([id, label], index) => <button key={id} id={`config-tab-${id}`} role="tab"
-        aria-selected={tab === id} aria-controls={`config-panel-${id}`} tabIndex={tab === id ? 0 : -1}
-        onKeyDown={event => tabKey(event, index)} onClick={() => selectTab(id)}>{label}</button>)}</div>
+      <ApplicationEditorHeader name={draft?.content.application.name || appName} typeLabel="课程查询"
+        publicationLabel={draft?.current_release_id ? '已发布' : scoped ? '未发布' : '使用内置配置'} dirty={dirty}
+        unpublished={!!(savedUnpublished || (scoped && draft && !draft.current_release_id))} actions={<>
+        {onUse && draft?.current_release_id && <button className="quiet-button" disabled={busy || localWork || uncertain} onClick={() => onUse(applicationId ?? 'schedule')}>使用应用 ↗</button>}<button className="quiet-button" disabled={busy} onClick={reload}>重新加载</button></>} />
+      <ApplicationConfigTabs items={availableTabs} value={tab} onChange={selectTab} />
       {message && <div className={`management-notice ${failure ? 'error' : ''}`} role={failure ? 'alert' : 'status'}>{message}</div>}
       {retryCommand && <div className="management-notice warning" role="alert">上次发布结果待核对。
         <button disabled={busy} onClick={() => void action(async () => {await writeRelease(retryCommand.path, retryCommand.body);}, '已确认上次请求结果。')}>使用相同请求号重试</button>
@@ -159,20 +152,11 @@ export function ConfigAdmin({initialToken = '', onSessionExpired, onDirtyChange,
           <button className="text-button" onClick={() => selectTab(questionEditing ? 'questions' : 'ai')}>前往处理</button></div>}
         <div className="application-config-body">
           <section id="config-panel-basic" role="tabpanel" aria-labelledby="config-tab-basic" hidden={tab !== 'basic'}>
-            <div className="config-section-heading"><h3>应用基本信息与访问范围</h3><p>设置应用对外展示的信息，以及哪些角色可以使用。</p></div>
-            <fieldset disabled={writeBlocked} className="management-fields"><legend className="sr-only">应用基本信息</legend>
-              <div className="management-form-grid"><label>应用名称<input required maxLength={30} value={draft.content.application.name} onChange={event => change({...draft.content, application: {...draft.content.application, name: event.target.value}})} /></label>
-                <label>应用分类<select value={draft.content.application.category} onChange={event => change({...draft.content, application: {...draft.content.application, category: event.target.value as Content['application']['category']}})}>{['学习服务', '校园事务', '校园生活'].map(value => <option key={value}>{value}</option>)}</select></label>
-                <label className="full-width">应用描述<textarea rows={4} maxLength={160} value={draft.content.application.description} onChange={event => change({...draft.content, application: {...draft.content.application, description: event.target.value}})} /></label>
-              </div>
-              <div className="role-setting"><h4>可见及可使用角色</h4><p className="hint">至少选择一个角色。发布后由服务端校验访问权限。</p><div className="role-options">{[['student', '学生'], ['teacher', '教师'], ['config_admin', '配置管理员']].map(([value, label]) => <label key={value}><input type="checkbox" checked={draft.content.application.visible_roles.includes(value as Content['application']['visible_roles'][number])} onChange={event => {
-                const role = value as Content['application']['visible_roles'][number];
-                change({...draft.content, application: {...draft.content.application, visible_roles: event.target.checked ? [...draft.content.application.visible_roles, role] : draft.content.application.visible_roles.filter(item => item !== role)}});
-              }} />{label}</label>)}</div></div>
-            </fieldset>
+            <ApplicationConfigHeading title="应用基本信息与访问范围" description="设置应用对外展示的信息，以及哪些角色可以使用。" />
+            <ApplicationSettingsFields value={draft.content.application} disabled={writeBlocked} onChange={application => change({...draft.content, application})} />
           </section>
           <section id="config-panel-page" role="tabpanel" aria-labelledby="config-tab-page" hidden={tab !== 'page'}>
-            <div className="config-section-heading"><h3>页面配置</h3><p>调整课表字段名称、顺序与显隐，下方预览会同步更新。</p></div>
+            <ApplicationConfigHeading title="页面配置" description="调整课表字段名称、顺序与显隐，下方预览会同步更新。" />
             <fieldset disabled={writeBlocked} className="management-fields"><legend className="sr-only">课表展示字段</legend>
               {draft.content.columns.map((column, index) => <div className="column-editor" key={column.field}>
                 <label><input type="checkbox" checked={column.visible} onChange={event => change({...draft.content, columns: draft.content.columns.map((item, i) => i === index ? {...item, visible: event.target.checked} : item)})} />{column.field}</label>
@@ -186,7 +170,7 @@ export function ConfigAdmin({initialToken = '', onSessionExpired, onDirtyChange,
               <ScheduleTable columns={draft.content.columns} rows={[{id: 'preview', name: '程序设计基础（预览）', date: '2026-10-19', start_time: '09:00', end_time: '10:35', location: '教学楼 A-201', teacher: '模拟教师'}]} /></div>
           </section>
           <section id="config-panel-questions" role="tabpanel" aria-labelledby="config-tab-questions" hidden={tab !== 'questions'}>
-            <div className="config-section-heading"><h3>问法与规则</h3><p>维护常用表达、审核学习结果，或调整匹配规则。</p></div>
+            <ApplicationConfigHeading title="问法与规则" description="维护常用表达、审核学习结果，或调整匹配规则。" />
             <div className="management-subtabs" aria-label="问法配置视图">{[['library', '问法库'], ['rules', '匹配规则']].map(([key, label]) => <button key={key} aria-pressed={ruleView === key} onClick={() => setRuleView(key)}>{label}</button>)}</div>
             <div hidden={ruleView !== 'library'}>{visited.has('questions') && <QuestionLibrary basePath={scoped ? `/api/v1/admin/applications/${applicationId}/questions` : undefined} token={initialToken} draftRevision={draft.revision}
               disabled={busy || dirty || proposalEditing || proposalPending || !!retryCommand} onBusyChange={setBusy} onEditingChange={setQuestionEditing}
@@ -206,14 +190,14 @@ export function ConfigAdmin({initialToken = '', onSessionExpired, onDirtyChange,
             </fieldset>
           </section>
           <section id="config-panel-ai" role="tabpanel" aria-labelledby="config-tab-ai" hidden={tab !== 'ai'}>
-            <div className="config-section-heading"><h3>AI 设计</h3><p>描述修改目标，核对差异后接受为草稿；发布仍需人工确认。</p></div>
+            <ApplicationConfigHeading title="AI 设计" description="描述修改目标，核对差异后接受为草稿；发布仍需人工确认。" />
             {dirty && <p className="management-notice">请先暂存基础信息或页面修改，再生成 AI 提案。</p>}
             {visited.has('ai') && <CourseProposalPanel token={initialToken} revision={draft.revision} resetVersion={refreshVersion}
               disabled={busy || dirty || questionEditing || !!retryCommand} onBusyChange={setBusy} onPendingChange={setProposalPending}
               onEditingChange={setProposalEditing} onAccepted={refresh} onSessionExpired={onSessionExpired} />}
           </section>
           <section id="config-panel-history" role="tabpanel" aria-labelledby="config-tab-history" hidden={tab !== 'history'}>
-            <div className="config-section-heading"><h3>发布记录</h3><p>查看当前版本、历史发布及操作审计。回滚会创建新的发布记录。</p></div>
+            <ApplicationConfigHeading title="发布记录" description="查看当前版本、历史发布及操作审计。回滚会创建新的发布记录。" />
             <p className="hint">当前版本：{draft.current_release_id ?? (scoped ? '尚未发布' : '内置默认配置')}</p>
             <ul className="management-releases">{history.map(release => <li key={release.id} className="release-row"><div><strong>{release.operation === 'rollback' ? '回滚发布' : '应用发布'}</strong> {release.id === draft.current_release_id && <span className="management-badge">当前生效</span>}
               <p>{new Date(release.created_at).toLocaleString()}</p><small>{release.id}</small>{release.source_release_id && <p className="hint">恢复自 {release.source_release_id}</p>}</div>
@@ -233,11 +217,12 @@ export function ConfigAdmin({initialToken = '', onSessionExpired, onDirtyChange,
             </details>
           </section>
         </div>
-        <footer className="management-action-bar"><div><strong>{dirty ? '有未保存修改' : savedUnpublished ? '草稿已保存，尚未发布' : '草稿已保存'}</strong><small>草稿修订 {draft.revision} · {tabNames[tab]}</small></div>
-          <div><button className="quiet-button" disabled={writeBlocked || !dirty} onClick={() => void action(save, '更改已暂存，当前发布版本不受影响。')}>暂存更改</button>
-            <button disabled={writeBlocked} onClick={() => {setPreview(null); setPublishOpen(true);}}>试跑发布</button></div></footer>
+        <ApplicationEditorActionBar dirty={dirty} unpublished={savedUnpublished} pending={uncertain} revision={draft.revision} section={tabNames[tab]}>
+          <button className="quiet-button" disabled={writeBlocked || !dirty} onClick={() => void action(save, '更改已暂存，当前发布版本不受影响。')}>暂存更改</button>
+            <button disabled={writeBlocked} onClick={() => {setPreview(null); setPublishOpen(true);}}>试跑发布</button></ApplicationEditorActionBar>
       </> : <div className="management-empty" role="status">{busy ? '正在加载应用配置…' : '应用尚未加载，请点击重新加载重试。'}</div>}
       {publishOpen && draft && <ManagementDialog title="试跑与发布" busy={busy} onClose={() => setPublishOpen(false)}>
+        <ApplicationChangeReview before={published} after={draft.content} />
         <p className="hint">先核对当前草稿的查询行为与变更，再确认发布。{dirty ? '当前存在未保存修改，请先暂存。' : `草稿修订 ${draft.revision}。`}</p>
         {dirty && <button disabled={writeBlocked} onClick={() => void action(save, '已暂存，请继续试跑。')}>暂存当前更改</button>}
         <label>试跑问句<input maxLength={200} value={question} disabled={busy} onChange={event => {setQuestion(event.target.value); setPreview(null);}} /></label>

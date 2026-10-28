@@ -1,0 +1,16 @@
+{
+  "protocol_version": "1.0.0",
+  "type_id": "platform.form",
+  "type_version": "1.0.0",
+  "family": "form",
+  "title": "简单登记",
+  "config_schema_id": "urn:campus:application-types:v1:form-config",
+  "config_schema_version": "1.0.0",
+  "runtime_adapter_id": "form-records-v1",
+  "editor_sections": [
+    {"id": "fields", "title": "表单字段", "editor_id": "form-fields-v1"},
+    {"id": "records", "title": "登记记录", "editor_id": "form-records-v1"}
+  ],
+  "features": {"ai_design": false, "question_library": false},
+  "required_capability_ids": ["form.records.submit", "form.records.read"]
+}

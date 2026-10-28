@@ -1,0 +1,397 @@
+{
+  "$defs": {
+    "ApplicationInfo": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "default": "学习服务",
+          "enum": [
+            "学习服务",
+            "校园事务",
+            "校园生活"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "description": {
+          "default": "一句话查询课程，随时掌握每天的学习安排。",
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Description",
+          "type": "string"
+        },
+        "name": {
+          "default": "课表助手",
+          "maxLength": 30,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "visible_roles": {
+          "items": {
+            "enum": [
+              "student",
+              "teacher",
+              "config_admin"
+            ],
+            "type": "string"
+          },
+          "maxItems": 3,
+          "minItems": 1,
+          "title": "Visible Roles",
+          "type": "array"
+        }
+      },
+      "title": "ApplicationInfo",
+      "type": "object"
+    },
+    "Constraints": {
+      "additionalProperties": false,
+      "properties": {
+        "max_length": {
+          "maximum": 10000,
+          "minimum": 1,
+          "title": "Max Length",
+          "type": "integer"
+        },
+        "maximum": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "title": "Maximum",
+          "type": "number"
+        },
+        "minimum": {
+          "maximum": 9007199254740991,
+          "minimum": -9007199254740991,
+          "title": "Minimum",
+          "type": "number"
+        },
+        "precision": {
+          "maximum": 6,
+          "minimum": 0,
+          "title": "Precision",
+          "type": "integer"
+        }
+      },
+      "title": "Constraints",
+      "type": "object"
+    },
+    "Control": {
+      "additionalProperties": false,
+      "properties": {
+        "component": {
+          "enum": [
+            "text",
+            "textarea",
+            "number",
+            "checkbox",
+            "select",
+            "multiselect",
+            "date"
+          ],
+          "title": "Component",
+          "type": "string"
+        },
+        "field_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Field Id",
+          "type": "string"
+        },
+        "help": {
+          "maxLength": 300,
+          "title": "Help",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "layout": {
+          "$ref": "#/$defs/Layout"
+        },
+        "readonly": {
+          "const": false,
+          "default": false,
+          "title": "Readonly",
+          "type": "boolean"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "field_id",
+        "component",
+        "label",
+        "help",
+        "required",
+        "layout"
+      ],
+      "title": "Control",
+      "type": "object"
+    },
+    "DataField": {
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "$ref": "#/$defs/Constraints"
+        },
+        "data_type": {
+          "enum": [
+            "string",
+            "integer",
+            "decimal",
+            "boolean",
+            "date",
+            "enum",
+            "enum_list"
+          ],
+          "title": "Data Type",
+          "type": "string"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "key": {
+          "pattern": "^[a-z][a-z0-9_]{0,63}$",
+          "title": "Key",
+          "type": "string"
+        },
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "nullable": {
+          "title": "Nullable",
+          "type": "boolean"
+        },
+        "options": {
+          "items": {
+            "$ref": "#/$defs/Option"
+          },
+          "maxItems": 20,
+          "title": "Options",
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "label",
+        "data_type",
+        "nullable",
+        "constraints",
+        "options"
+      ],
+      "title": "DataField",
+      "type": "object"
+    },
+    "DataModel": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter_id": {
+          "const": "form.records",
+          "title": "Adapter Id",
+          "type": "string"
+        },
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/DataField"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "adapter_id",
+        "fields"
+      ],
+      "title": "DataModel",
+      "type": "object"
+    },
+    "Form": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "model_id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Model Id",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "$ref": "#/$defs/Section"
+          },
+          "maxItems": 1,
+          "minItems": 1,
+          "title": "Sections",
+          "type": "array"
+        },
+        "submit_action_id": {
+          "const": "form.records.submit",
+          "title": "Submit Action Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "model_id",
+        "sections",
+        "submit_action_id"
+      ],
+      "title": "Form",
+      "type": "object"
+    },
+    "Layout": {
+      "additionalProperties": false,
+      "properties": {
+        "desktop": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Desktop",
+          "type": "integer"
+        },
+        "mobile": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Mobile",
+          "type": "integer"
+        },
+        "tablet": {
+          "maximum": 12,
+          "minimum": 1,
+          "title": "Tablet",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "mobile",
+        "tablet",
+        "desktop"
+      ],
+      "title": "Layout",
+      "type": "object"
+    },
+    "Option": {
+      "additionalProperties": false,
+      "properties": {
+        "label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "value": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "label"
+      ],
+      "title": "Option",
+      "type": "object"
+    },
+    "Section": {
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "items": {
+            "$ref": "#/$defs/Control"
+          },
+          "maxItems": 30,
+          "minItems": 1,
+          "title": "Fields",
+          "type": "array"
+        },
+        "id": {
+          "pattern": "^[a-z][a-z0-9_-]{0,63}$",
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "fields"
+      ],
+      "title": "Section",
+      "type": "object"
+    }
+  },
+  "$id": "urn:campus:application-types:v1:form-config",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "application": {
+      "$ref": "#/$defs/ApplicationInfo"
+    },
+    "form": {
+      "$ref": "#/$defs/Form"
+    },
+    "model": {
+      "$ref": "#/$defs/DataModel"
+    },
+    "schema_version": {
+      "const": "1.0.0",
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "application",
+    "model",
+    "form"
+  ],
+  "title": "FormConfig",
+  "type": "object"
+}

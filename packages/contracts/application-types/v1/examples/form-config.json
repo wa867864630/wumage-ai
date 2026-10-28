@@ -1,0 +1,59 @@
+{
+  "application": {
+    "category": "校园事务",
+    "description": "填写登记表并查询本人记录。",
+    "name": "登记应用",
+    "visible_roles": [
+      "student",
+      "teacher",
+      "config_admin"
+    ]
+  },
+  "form": {
+    "id": "registration_form",
+    "model_id": "registration",
+    "name": "登记表",
+    "sections": [
+      {
+        "fields": [
+          {
+            "component": "textarea",
+            "field_id": "content",
+            "help": "",
+            "id": "content_control",
+            "label": "登记内容",
+            "layout": {
+              "desktop": 12,
+              "mobile": 12,
+              "tablet": 12
+            },
+            "readonly": false,
+            "required": true
+          }
+        ],
+        "id": "basic",
+        "title": "登记信息"
+      }
+    ],
+    "submit_action_id": "form.records.submit"
+  },
+  "model": {
+    "adapter_id": "form.records",
+    "fields": [
+      {
+        "constraints": {
+          "max_length": 1000
+        },
+        "data_type": "string",
+        "id": "content",
+        "key": "content",
+        "label": "登记内容",
+        "nullable": false,
+        "options": []
+      }
+    ],
+    "id": "registration",
+    "name": "登记记录"
+  },
+  "schema_version": "1.0.0"
+}

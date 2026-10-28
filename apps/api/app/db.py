@@ -3,7 +3,7 @@ import os
 from functools import lru_cache
 from app.settings import SettingsError, database_options
 
-LATEST_REVISION = '0006_application_runtime'
+LATEST_REVISION = '0011_work_drafts_lifecycle'
 
 
 class ConfigUnavailable(Exception):
